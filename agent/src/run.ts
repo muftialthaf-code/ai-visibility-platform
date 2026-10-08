@@ -1,4 +1,4 @@
-import { addUsage, listRuns, monthlyCost, setTopicStatus, startRun, updateRun, type RunStatus } from '@avp/db';
+import { addUsage, listRuns, markStaleRuns, monthlyCost, notifiedThisMonth, setTopicStatus, startRun, updateRun, type RunStatus } from '@avp/db';
 import { articlePath } from '@avp/content';
 import { runDeterministicChecks, gatesPassed, riskScore } from './checks/deterministic.ts';
 import { judgeArticle } from './checks/judge.ts';
@@ -201,6 +201,8 @@ export async function runAgent(ctx: AgentContext, opts: RunOptions): Promise<Run
   if (t.agent.paused) return skip('The agent is paused for this business.');
   if (t.agent.articlesPerDay === 0) return skip('Articles per day is set to 0.');
 
+  // A run whose runner died would otherwise block this business until someone noticed.
+  if (!opts.dryRun) await markStaleRuns(ctx.db);
   const today = ctx.now().toISOString().slice(0, 10);
   const recent = (await listRuns(ctx.db, { tenantId: t.id, kind: 'agent', limit: 50 })).filter((r) => r.started_at.toString().length > 0);
   const active = recent.find((r) => r.status === 'running' && Date.now() - new Date(r.started_at).getTime() < 90 * 60_000);
@@ -223,9 +225,26 @@ export async function runAgent(ctx: AgentContext, opts: RunOptions): Promise<Run
     } else ctx.llm.meter.configure({ limitUsd: null });
     const r = await runOne(ctx, opts);
     results.push(r);
+    if (!opts.dryRun) await warnIfNearBudget(ctx);
     if (r.status === 'failed' || r.status === 'skipped') break;
   }
   return results;
 }
 
 export { articlePath };
+
+/** One email and dashboard note per month when a business has used the configured share of its budget. */
+async function warnIfNearBudget(ctx: AgentContext) {
+  const budget = ctx.tenant.agent.monthlyBudgetUsd;
+  const percent = ctx.notifications.budgetAlertPercent;
+  if (budget <= 0 || percent <= 0) return;
+  const m = month(ctx.now());
+  const spent = await monthlyCost(ctx.db, ctx.tenant.id, m);
+  if ((spent / budget) * 100 < percent || (await notifiedThisMonth(ctx.db, ctx.tenant.id, 'budget-warning', m))) return;
+  await notifyIf(ctx, true, {
+    tenantId: ctx.tenant.id,
+    kind: 'budget-warning',
+    subject: `${ctx.tenant.identity.name}: ${Math.round((spent / budget) * 100)}% of the monthly budget used`,
+    body: `$${spent.toFixed(2)} of $${budget.toFixed(2)} spent this month. The agent stops at the cap; raise the budget on the business's Controls tab if you want it to continue.`,
+  });
+}

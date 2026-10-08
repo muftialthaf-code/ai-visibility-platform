@@ -189,3 +189,46 @@ export async function listScheduled(db: Db, opts: { tenantId?: string; pendingOn
     [opts.tenantId ?? null, opts.pendingOnly ?? false],
   );
 }
+
+/* ---------- usage report ---------- */
+
+export interface UsageRow {
+  tenant_id: string;
+  cost_usd: number;
+  runs: number;
+  succeeded: number;
+  held: number;
+  failed: number;
+  /** Total time spent in finished runs, in seconds. This is the measured basis for Actions minutes. */
+  run_seconds: number;
+  tokens_in: number;
+  tokens_out: number;
+}
+
+/** Spend, outcomes and measured run time per business for one calendar month (UTC), e.g. "2026-10". */
+export async function usageReport(db: Db, month: string): Promise<UsageRow[]> {
+  return db.query<UsageRow>(
+    `select r.tenant_id,
+            coalesce((select sum(cost_usd) from usage_events u where u.tenant_id = r.tenant_id and to_char(u.at at time zone 'UTC','YYYY-MM') = $1), 0)::float8 as cost_usd,
+            count(*)::int as runs,
+            count(*) filter (where r.status = 'success')::int as succeeded,
+            count(*) filter (where r.status = 'held')::int as held,
+            count(*) filter (where r.status = 'failed')::int as failed,
+            coalesce(sum(extract(epoch from (r.finished_at - r.started_at))) filter (where r.finished_at is not null), 0)::float8 as run_seconds,
+            coalesce(sum(r.tokens_in), 0)::float8 as tokens_in,
+            coalesce(sum(r.tokens_out), 0)::float8 as tokens_out
+       from runs r
+      where r.kind = 'agent' and to_char(r.started_at at time zone 'UTC','YYYY-MM') = $1
+      group by r.tenant_id order by r.tenant_id`,
+    [month],
+  );
+}
+
+/** Has a notification of this kind been recorded for the business since the start of the month? Used to warn only once. */
+export async function notifiedThisMonth(db: Db, tenantId: string, kind: string, month: string): Promise<boolean> {
+  const rows = await db.query(
+    `select 1 from notifications where tenant_id = $1 and kind = $2 and to_char(at at time zone 'UTC','YYYY-MM') = $3 limit 1`,
+    [tenantId, kind, month],
+  );
+  return rows.length > 0;
+}

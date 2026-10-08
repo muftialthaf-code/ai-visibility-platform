@@ -3,9 +3,9 @@ name: Dashboard
 on:
   push:
     branches: [main]
-    paths: ['apps/dashboard/**', 'packages/**', 'pnpm-lock.yaml', '.github/workflows/dashboard.yml']
+    paths: ['apps/dashboard/**', 'agent/**', 'packages/**', 'apps/site/**', 'tenants/_template/**', 'pnpm-lock.yaml', '.github/workflows/dashboard.yml']
   pull_request:
-    paths: ['apps/dashboard/**', 'packages/**', 'pnpm-lock.yaml', '.github/workflows/dashboard.yml']
+    paths: ['apps/dashboard/**', 'agent/**', 'packages/**', 'apps/site/**', 'tenants/_template/**', 'pnpm-lock.yaml', '.github/workflows/dashboard.yml']
 
 permissions:
   contents: read

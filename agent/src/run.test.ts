@@ -151,3 +151,58 @@ describe('review actions', () => {
     expect(await publishDue({ db: h.db, gh: h.gh, now: new Date('2026-10-09T10:00:00Z') })).toEqual({ published: 0, failed: 0 });
   });
 });
+
+describe('cost and scale', () => {
+  it('warns once a month when a business nears its budget', async () => {
+    const { addUsage, usageReport } = await import('@avp/db');
+    await addUsage(h.db, { tenantId: 'acme', provider: 'anthropic', costUsd: 41 }); // 82% of the $50 budget
+    await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
+    await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
+    expect((await listNotifications(h.db)).filter((n) => n.kind === 'budget-warning')).toHaveLength(1);
+    const [row] = await usageReport(h.db, '2026-10');
+    expect(row!.runs).toBe(2);
+    expect(row!.cost_usd).toBeGreaterThan(41);
+    expect(row!.run_seconds).toBeGreaterThanOrEqual(0);
+  });
+
+  it('keeps stopped runs from blocking a business forever', async () => {
+    const { startRun } = await import('@avp/db');
+    const id = await startRun(h.db, { tenantId: 'acme', kind: 'agent' });
+    await h.db.query(`update runs set started_at = now() - interval '3 hours' where id = $1`, [id]);
+    const [r] = await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
+    expect(r!.status).toBe('success');
+    expect((await listRuns(h.db, { tenantId: 'acme', status: 'failed' })).length).toBe(1);
+  });
+
+  it('runs many businesses at once without collisions: one draft each, on its own branch, with its own cost', async () => {
+    const { addTenant, setStatus, updateTenant } = await import('@avp/tenant-ops');
+    const { costByTenant } = await import('@avp/db');
+    const ids = Array.from({ length: 12 }, (_, i) => `biz-${String.fromCharCode(97 + i)}`);
+    for (const id of ids) {
+      await addTenant(h.store, { id, name: `Biz ${id}`, domain: `${id}.example.com` });
+      await updateTenant(h.store, id, {
+        identity: { tagline: { en: 'Demo.', ar: 'تجريبي.' } },
+        profile: { description: { en: 'Demo.', ar: 'تجريبي.' }, audience: { en: 'Demo.', ar: 'تجريبي.' }, pricingApproach: null },
+        author: { bio: { en: 'Demo.', ar: 'تجريبي.' } },
+        agent: { paused: false, articlesPerDay: 1, monthlyBudgetUsd: 50, articleWords: { min: 100, max: 400 } },
+      });
+      await setStatus(h.store, id, 'active');
+    }
+    const { getTenant } = await import('@avp/tenant-ops');
+    const results = await Promise.all(
+      ids.map(async (id) => (await runAgent({ ...h.ctx(demoLlm({ topics: [`How does ${id} work for new customers?`] })), tenant: await getTenant(h.store, id) }, { trigger: 'schedule' }))[0]!),
+    );
+    expect(results.map((r) => r.error ?? r.status)).toEqual(ids.map(() => 'success'));
+    const branches = h.fake.pulls.map((p) => p.head);
+    expect(new Set(branches).size).toBe(12);
+    expect(branches.every((b) => ids.some((id) => b.startsWith(`agent/${id}/`)))).toBe(true);
+    const costs = await costByTenant(h.db, '2026-10');
+    expect(ids.every((id) => (costs[id] ?? 0) > 0)).toBe(true);
+    // Each business's draft touched only its own folder.
+    for (const p of h.fake.pulls) {
+      const files = (await h.gh.pullFiles(p.number)).map((f) => f.path);
+      const id = p.head.split('/')[1]!;
+      expect(files.every((f) => f.startsWith(`tenants/${id}/`))).toBe(true);
+    }
+  }, 120_000);
+});
