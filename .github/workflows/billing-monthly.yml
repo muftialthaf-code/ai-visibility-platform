@@ -1,0 +1,35 @@
+name: Monthly usage statement
+
+# On the 2nd of each month, sends last month's per-business usage to the billing webhook (if one is configured).
+# Does nothing unless the repository variable BILLING_ENABLED is "true".
+on:
+  schedule:
+    - cron: '23 4 2 * *'
+  workflow_dispatch:
+    inputs:
+      month:
+        description: Month to send (YYYY-MM). Blank means last month.
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    if: ${{ vars.BILLING_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BILLING_WEBHOOK_URL: ${{ secrets.BILLING_WEBHOOK_URL }}
+          BILLING_WEBHOOK_SECRET: ${{ secrets.BILLING_WEBHOOK_SECRET }}
+          MONTH: ${{ inputs.month }}
+        run: pnpm -s avp billing usage ${MONTH:+--month "$MONTH"} --post

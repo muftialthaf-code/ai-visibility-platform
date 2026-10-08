@@ -1,16 +1,17 @@
 import { getSetting, listAudit, listUsers } from '@avp/db';
-import { DEFAULT_GLOBALS, DEFAULT_NOTIFICATIONS, parseGlobals, parseNotifications } from '@avp/runtime';
+import { DEFAULT_BRANDING, DEFAULT_GLOBALS, DEFAULT_NOTIFICATIONS, parseBranding, parseGlobals, parseNotifications } from '@avp/runtime';
 import { ActionForm } from '@/components/ActionForm';
 import { Badge, ago } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { connectionStatus } from '@/lib/env';
 import { getDb } from '@/lib/services';
-import { createUserAction, saveDefaultsAction, saveNotificationsAction, updateUserAction } from './actions';
+import { createUserAction, saveBrandingAction, saveDefaultsAction, saveNotificationsAction, updateUserAction } from './actions';
 
 const TABS = [
   { key: 'users', title: 'Users and roles' },
   { key: 'defaults', title: 'Global defaults' },
   { key: 'notifications', title: 'Notifications' },
+  { key: 'branding', title: 'Branding' },
   { key: 'connections', title: 'Connections' },
   { key: 'audit', title: 'Audit log' },
 ];
@@ -19,6 +20,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   await requireUser('users:manage');
   const { tab = 'users' } = await searchParams;
   const db = await getDb();
+  const branding = tab === 'branding' ? await getSetting(db, 'branding', DEFAULT_BRANDING) : null;
   return (
     <>
       <h1>Settings</h1>
@@ -35,6 +37,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {tab === 'notifications' && (
         <Notifications values={parseNotifications(await getSetting(db, 'notifications', DEFAULT_NOTIFICATIONS))} />
       )}
+
+      {tab === 'branding' && (() => {
+        return <BrandingForm values={parseBranding(branding)} />;
+      })()}
 
       {tab === 'connections' && (
         <div className="card">
@@ -161,6 +167,21 @@ async function Audit() {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function BrandingForm({ values }: { values: ReturnType<typeof parseBranding> }) {
+  return (
+    <div className="card" style={{ maxWidth: '34rem' }}>
+      <h2 style={{ marginTop: 0 }}>Branding</h2>
+      <p className="muted small">What clients see: the name in the header and on the onboarding form, and a line at the foot of printed reports.</p>
+      <ActionForm action={saveBrandingAction} submit="Save branding">
+        <label htmlFor="platformName">Name</label>
+        <input id="platformName" name="platformName" type="text" maxLength={60} defaultValue={values.platformName} />
+        <label htmlFor="reportFooter">Report footer <span className="hint">(optional)</span></label>
+        <input id="reportFooter" name="reportFooter" type="text" maxLength={200} defaultValue={values.reportFooter} placeholder="Prepared by PAX Insyte Solutions" />
+      </ActionForm>
     </div>
   );
 }

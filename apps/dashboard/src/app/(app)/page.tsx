@@ -1,8 +1,11 @@
+import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { loadOverview } from '@/lib/overview';
 import { Badge, ago, money, when } from '@/components/ui';
 
 export default async function OverviewPage() {
+  // Clients have one screen: their own reports.
+  if ((await requireUser()).role === 'client') redirect('/reports');
   await requireUser('overview:read');
   const o = await loadOverview();
   const pending = o.tenants.reduce((a, t) => a + t.pendingReviews, 0);

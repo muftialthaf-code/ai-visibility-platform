@@ -64,3 +64,12 @@ describe('settings', () => {
     expect(n.reminderAfterHours).toBe(720);
   });
 });
+
+describe('parseBranding', () => {
+  it('falls back to the defaults, trims, caps length and strips markup characters', async () => {
+    const { parseBranding, DEFAULT_BRANDING } = await import('./settings.ts');
+    expect(parseBranding(null)).toEqual(DEFAULT_BRANDING);
+    expect(parseBranding({ platformName: '  <b>Acme</b> Reports ', reportFooter: 'x'.repeat(500) })).toEqual({ platformName: 'bAcme/b Reports', reportFooter: 'x'.repeat(200) });
+    expect(parseBranding({ platformName: '   ' }).platformName).toBe('Control dashboard');
+  });
+});

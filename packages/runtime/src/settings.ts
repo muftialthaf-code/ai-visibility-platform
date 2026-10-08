@@ -84,3 +84,25 @@ export function parseNotifications(raw: unknown): NotificationSettings {
     budgetAlertPercent: num(r.budgetAlertPercent, 1, 100, DEFAULT_NOTIFICATIONS.budgetAlertPercent),
   };
 }
+
+/** Name and footer shown to clients, so the platform can be presented under an agency's own name. */
+export interface Branding {
+  platformName: string;
+  /** Printed at the bottom of client reports, for example "Prepared by PAX Insyte Solutions". */
+  reportFooter: string;
+}
+
+export const DEFAULT_BRANDING: Branding = { platformName: 'Control dashboard', reportFooter: '' };
+
+const clean = (v: unknown, max: number, fallback: string) => {
+  const s = typeof v === 'string' ? v.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, max) : '';
+  return s || fallback;
+};
+
+export function parseBranding(raw: unknown): Branding {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  return {
+    platformName: clean(r.platformName, 60, DEFAULT_BRANDING.platformName),
+    reportFooter: typeof r.reportFooter === 'string' ? r.reportFooter.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 200) : '',
+  };
+}

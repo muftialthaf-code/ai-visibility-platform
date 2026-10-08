@@ -1,6 +1,7 @@
 import { sql as core } from './001_core.ts';
 import { sql as agent } from './002_agent.ts';
 import { sql as tracker } from './003_tracker.ts';
+import { sql as clients } from './004_clients.ts';
 
 export interface Migration {
   name: string;
@@ -15,4 +16,5 @@ export const MIGRATIONS: Migration[] = [
   { name: '001_core', sql: core },
   { name: '002_agent', sql: agent },
   { name: '003_tracker', sql: tracker },
+  { name: '004_clients', sql: clients },
 ];

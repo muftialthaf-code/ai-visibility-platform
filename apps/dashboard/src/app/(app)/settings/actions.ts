@@ -1,6 +1,6 @@
 'use server';
 import { createUser, getUser, listUsers, setSetting, updateUser, type Role } from '@avp/db';
-import { parseGlobals, parseNotifications } from '@avp/runtime';
+import { parseBranding, parseGlobals, parseNotifications } from '@avp/runtime';
 import type { FormState } from '@/components/ActionForm';
 import { audit, requireUser } from '@/lib/auth';
 import { hashPassword, passwordProblem } from '@/lib/crypto';
@@ -85,5 +85,13 @@ export async function saveNotificationsAction(_prev: FormState, data: FormData):
   });
   await setSetting(await getDb(), 'notifications', values);
   await audit(me, 'settings.notifications', undefined, { recipients: values.emails.length });
+  return { ok: 'Saved.', reload: true };
+}
+
+export async function saveBrandingAction(_prev: FormState, data: FormData): Promise<FormState> {
+  const me = await requireUser('settings:manage');
+  const values = parseBranding({ platformName: text(data, 'platformName'), reportFooter: text(data, 'reportFooter') });
+  await setSetting(await getDb(), 'branding', values);
+  await audit(me, 'settings.branding', undefined, values as unknown as Record<string, unknown>);
   return { ok: 'Saved.', reload: true };
 }

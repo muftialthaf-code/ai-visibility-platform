@@ -343,3 +343,84 @@ test.describe.serial('review queue', () => {
     await h.db.close();
   });
 });
+
+test.describe.serial('clients', () => {
+  test('an invite link lets a client describe their business once; the owner turns it into a paused business', async ({ browser }) => {
+    const owner = await browser.newContext({ storageState: STATE, baseURL: 'http://127.0.0.1:3100' });
+    const page = await owner.newPage();
+    await page.goto('/clients');
+    await page.getByLabel('Label').fill('Noor Bakery');
+    await page.getByRole('button', { name: 'Create invite link' }).click();
+    const message = await page.getByRole('status').textContent();
+    const link = /(http:\/\/\S+\/onboard\/[A-Za-z0-9_-]{43})/.exec(message ?? '')?.[1];
+    expect(link).toBeTruthy();
+
+    // The client has no account: they open the link in a fresh browser.
+    const anon = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' });
+    const client = await anon.newPage();
+    await client.goto(link!);
+    await client.getByLabel('Your name').fill('Noor');
+    await client.getByLabel('Your email').fill('noor@bakery.example');
+    await client.getByLabel('Business name').fill('Noor Bakery');
+    await client.getByLabel('Website address').fill('noorbakery.example');
+    await client.getByLabel('What does the business do?').fill('We bake fresh bread and pastries every morning in Jeddah.');
+    await client.getByRole('button', { name: 'Send' }).click();
+    await expect(client.getByRole('status')).toContainText('Thank you');
+
+    // The link works once.
+    await client.goto(link!);
+    await expect(client.getByText(/already been used or has expired/)).toBeVisible();
+    // An unknown link says the same thing and reveals nothing.
+    await client.goto('/onboard/' + 'a'.repeat(43));
+    await expect(client.getByText(/already been used or has expired/)).toBeVisible();
+
+    await page.goto('/clients');
+    await expect(page.getByText('We bake fresh bread')).toBeVisible();
+    await page.getByRole('button', { name: 'Create the business' }).click();
+    await expect(page).toHaveURL(/\/businesses\/noor-bakery\?tab=setup/);
+    const created = await githubFile('tenants/noor-bakery/tenant.json');
+    expect(created.status).toBe('paused');
+    expect(created.identity.domain).toBe('noorbakery.example');
+    expect(created.profile.description.en).toBe('We bake fresh bread and pastries every morning in Jeddah.');
+    await anon.close();
+    await owner.close();
+  });
+
+  test('a client signs in, lands on their own report, and cannot reach anything else', async ({ browser }) => {
+    const owner = await browser.newContext({ storageState: STATE, baseURL: 'http://127.0.0.1:3100' });
+    const op = await owner.newPage();
+    await op.goto('/settings?tab=users');
+    await op.getByLabel('Email').fill('client@bakery.example');
+    await op.getByLabel('Role').selectOption('client');
+    await op.getByLabel(/Business id/).fill('reviewco');
+    await op.getByLabel(/Temporary password/).fill('client-long-passphrase');
+    await op.getByRole('button', { name: 'Create user' }).click();
+    await expect(op.getByText('client@bakery.example').first()).toBeVisible();
+    await owner.close();
+
+    const context = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' });
+    const page = await context.newPage();
+    await page.goto('/login');
+    await page.getByLabel('Email').fill('client@bakery.example');
+    await page.getByLabel('Password').fill('client-long-passphrase');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page).toHaveURL(/\/setup-2fa$/);
+    const clientSecret = (await page.locator('code').first().textContent())!.trim();
+    await page.getByLabel('6-digit code').fill(totpCode(clientSecret, totpStep()));
+    await page.getByRole('button', { name: 'Turn on 2FA' }).click();
+
+    // Home sends a client to their one screen.
+    await expect(page).toHaveURL(/\/reports\/reviewco$/);
+    await expect(page.getByRole('heading', { name: /AI visibility/ })).toBeVisible();
+    // No sample answers, no other businesses, no owner tools.
+    await expect(page.getByText('Sample answers')).toHaveCount(0);
+    for (const path of ['/businesses', '/review', '/settings', '/runs', '/usage', '/clients', '/reports/acme-dental']) {
+      await page.goto(path);
+      await expect(page, path).toHaveURL(/\/forbidden$/);
+    }
+    await page.goto('/reports');
+    await expect(page).toHaveURL(/\/reports\/reviewco$/);
+    expect((await page.request.get('/reports/acme-dental/csv', { maxRedirects: 0 })).status()).not.toBe(200);
+    await context.close();
+  });
+});

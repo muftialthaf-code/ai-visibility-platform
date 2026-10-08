@@ -5,6 +5,8 @@ import { PrintButton } from '@/components/PrintButton';
 import { Badge } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { delta, percent, series } from '@/lib/reports';
+import { getSetting } from '@avp/db';
+import { DEFAULT_BRANDING, parseBranding } from '@avp/runtime';
 import { getDb, getStore, safe } from '@/lib/services';
 
 const PROVIDER_NAMES: Record<string, string> = { claude: 'Claude', perplexity: 'Perplexity', openai: 'ChatGPT' };
@@ -23,10 +25,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       week ? recentAnswers(db, id, week, 12) : [],
       searchConsoleWeeks(db, id, 12),
     ]);
-    return { tenant, week, visibility, prompts, rivals, answers, gsc };
+    const branding = parseBranding(await getSetting(db, 'branding', DEFAULT_BRANDING));
+    return { tenant, week, visibility, prompts, rivals, answers, gsc, branding };
   });
   if (!res.ok) return <><h1>Report</h1><div className="alert bad" role="alert">Could not load the report: {res.error}</div></>;
-  const { tenant, week, visibility, prompts, rivals, answers, gsc } = res.value;
+  const { tenant, week, visibility, prompts, rivals, answers, gsc, branding } = res.value;
   const providers = [...new Set(visibility.map((v) => v.provider))].sort();
   const all = series(visibility);
   const lines = [{ name: 'All assistants', points: all }, ...providers.map((p) => ({ name: PROVIDER_NAMES[p] ?? p, points: series(visibility, p) }))];
@@ -106,6 +109,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           ))}
         </details>
       )}
+      {branding.reportFooter && <p className="muted small" style={{ marginTop: '2rem' }}>{branding.reportFooter}</p>}
     </>
   );
 }

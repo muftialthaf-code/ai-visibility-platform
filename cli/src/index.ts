@@ -10,6 +10,7 @@ import { need, parseArgs, strFlag, type ParsedArgs } from './args.ts';
 import { changedUrls, planDeploys, toMatrix } from './plan.ts';
 import { feedCommand } from './feed.ts';
 import { tenantCommand } from './tenant.ts';
+import { billingCommand } from './billing.ts';
 import { agentCommand, notifyCommand, publishDueCommand, trackerCommand } from './agent.ts';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -49,6 +50,11 @@ const commands: Record<string, Command> = {
   async agent(args, store) {
     const [sub, ...rest] = args.positional;
     return agentCommand({ ...args, positional: [sub ?? '', ...rest] }, store);
+  },
+
+  /** billing usage [--month] [--post] */
+  async billing(args, store) {
+    return billingCommand(args, store);
   },
 
   /** tracker run <tenant> */
