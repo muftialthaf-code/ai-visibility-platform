@@ -1,0 +1,39 @@
+---
+import type { CatalogItem } from '@avp/tenant-schema';
+import { formatData, formatPrice, formatValidity, planName } from '../lib/catalog.ts';
+import { href } from '../lib/tenant.ts';
+import { ui } from '../lib/i18n.ts';
+
+interface Props {
+  items: CatalogItem[];
+  lang: string;
+  showDestination?: boolean;
+}
+const { items, lang, showDestination = true } = Astro.props;
+const t = ui(lang);
+---
+
+<div style="overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        {showDestination && <th scope="col">{t.destination}</th>}
+        <th scope="col">{t.plan}</th>
+        <th scope="col">{t.data}</th>
+        <th scope="col">{t.validity}</th>
+        <th scope="col">{t.price}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {items.map((i) => (
+        <tr>
+          {showDestination && <td>{i.destination}</td>}
+          <th scope="row"><a href={href(`/plans/${i.id}`, lang)}>{planName(i, lang)}</a></th>
+          <td>{formatData(i, lang)}</td>
+          <td>{formatValidity(i, lang)}</td>
+          <td>{formatPrice(i.price, i.currency, lang)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

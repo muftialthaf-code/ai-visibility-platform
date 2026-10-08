@@ -111,6 +111,8 @@ const pageToggles = z.object({
 
 export const siteSchema = z.object({
   template: z.string().default('default'),
+  /** Shown under the plans table and on each plan page, for example a coverage or compatibility note. */
+  catalogNote: localized.optional(),
   pages: pageToggles.default(pageToggles.parse({})),
   modules: z
     .object({
@@ -155,9 +157,24 @@ export const integrationsSchema = z.object({
       z.object({
         id: slug,
         type: z.enum(['api', 'csv']),
-        /** Name of the secret holding the URL/credentials, if any. */
+        /** Name of the secret holding the API key, if the endpoint needs one. Never the key itself. */
         secretName: z.string().optional(),
+        /** API endpoint (type "api"). Public identifier only. */
         url: z.string().url().optional(),
+        /** Header that carries the key. Default "Authorization". */
+        authHeader: z.string().optional(),
+        /** "Bearer" sends "Bearer <key>"; "raw" sends the key as is. Default "Bearer". */
+        authScheme: z.enum(['Bearer', 'raw']).optional(),
+        /**
+         * How to read the supplier's JSON. `itemsPath` is where the array lives (dot path, empty for the
+         * root). `fields` maps each catalog field to a dot path inside one supplier item.
+         */
+        mapping: z
+          .object({
+            itemsPath: z.string().default(''),
+            fields: z.record(z.string(), z.string()),
+          })
+          .optional(),
       }),
     )
     .default([]),

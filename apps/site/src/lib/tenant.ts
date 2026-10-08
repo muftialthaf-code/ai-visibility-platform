@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
-import { loadTenant, type Localized, type TenantConfig } from '@avp/tenant-schema';
+import { catalogSchema, loadTenant, type Catalog, type Localized, type TenantConfig } from '@avp/tenant-schema';
+import { existsSync, readFileSync } from 'node:fs';
 import { absoluteUrl, localizedPath, type LocaleInfo } from '@avp/seo';
 
 const tenantId = process.env.TENANT ?? '_template';
@@ -33,6 +34,11 @@ export function url(path: string, lang: string): string {
 
 export type PageKey = keyof TenantConfig['site']['pages'];
 export const pageEnabled = (key: PageKey) => tenant.site.pages[key];
+/** The plan catalog is published only when the module is on and the committed catalog has plans. */
+export function hasCatalog(): boolean {
+  return tenant.site.modules.catalog && loadCatalog() !== null && loadCatalog()!.items.length > 0;
+}
+
 export const hasLegal = (doc: 'privacy' | 'terms') => pageEnabled('legal') && Boolean(tenant.legal[doc]);
 
 /**
@@ -56,10 +62,23 @@ export interface NavItem {
 export function navItems(): NavItem[] {
   const items: NavItem[] = [];
   if (pageEnabled('services') && tenant.profile.offerings.length > 0) items.push({ key: 'services', path: '/services' });
+  if (hasCatalog()) items.push({ key: 'plans', path: '/plans' });
   if (pageEnabled('pricing')) items.push({ key: 'pricing', path: '/pricing' });
   if (pageEnabled('about')) items.push({ key: 'about', path: '/about' });
   if (pageEnabled('faq') && tenant.faq.length > 0) items.push({ key: 'faq', path: '/faq' });
   if (pageEnabled('blog')) items.push({ key: 'blog', path: '/blog' });
   if (pageEnabled('contact')) items.push({ key: 'contact', path: '/contact' });
   return items;
+}
+
+let catalogCache: Catalog | null | undefined;
+
+/** The committed catalog (tenants/<id>/data/catalog.json), or null when there is none. Invalid data fails the build. */
+export function loadCatalog(): Catalog | null {
+  if (catalogCache !== undefined) return catalogCache;
+  const file = resolve(tenantsDir, tenant.id, 'data', 'catalog.json');
+  if (!existsSync(file)) return (catalogCache = null);
+  const parsed = catalogSchema.safeParse(JSON.parse(readFileSync(file, 'utf8')));
+  if (!parsed.success) throw new Error(`${file} is invalid: ${parsed.error.issues[0]?.path.join('.')}: ${parsed.error.issues[0]?.message}`);
+  return (catalogCache = parsed.data);
 }

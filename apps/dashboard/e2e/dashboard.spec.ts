@@ -92,11 +92,12 @@ test.describe.serial('dashboard', () => {
     expect(created.integrations.indexNowKey).toMatch(/^[a-f0-9]{32}$/);
 
     // The checklist lists what is missing.
-    await expect(page.getByText('Before launch')).toBeVisible();
+    await expect(page.getByText('Before launch', { exact: true })).toBeVisible();
+    await expect(page.getByText('Fix these first')).toBeVisible();
     await expect(page.getByText(/No lead form destination/)).toBeVisible();
 
     // Edit the identity section (English and Arabic taglines).
-    await page.getByRole('link', { name: 'Identity' }).click();
+    await page.getByRole('link', { name: 'Identity', exact: true }).click();
     await page.getByLabel('English').first().fill('Dental care for families in Riyadh.');
     await page.getByLabel(/Arabic/).first().fill('رعاية الأسنان للعائلات في الرياض.');
     await page.getByRole('button', { name: /Save identity/ }).click();
@@ -130,7 +131,26 @@ test.describe.serial('dashboard', () => {
     await page.getByRole('button', { name: /Save business/ }).click();
     await expect(page.getByRole('status')).toContainText('Saved');
 
-    // Launch from the checklist.
+    // Launching is refused while template placeholder text remains, and the reason is shown.
+    await page.getByRole('link', { name: 'Setup checklist' }).click();
+    await page.getByRole('button', { name: 'Launch business' }).click();
+    await expect(page.locator('main [role="alert"]').filter({ hasText: 'template placeholder text' }).first()).toBeVisible();
+    expect((await githubFile('tenants/acme-dental/tenant.json')).status).toBe('paused');
+
+    // Replace the remaining placeholders (audience, pricing, author bio), then launch.
+    await page.getByRole('link', { name: 'Business', exact: true }).click();
+    await page.locator('textarea[name="l:profile.audience:en"]').fill('Families in Riyadh.');
+    await page.locator('textarea[name="l:profile.audience:ar"]').fill('العائلات في الرياض.');
+    await page.locator('textarea[name="l:profile.pricingApproach:en"]').fill('Prices are agreed at the first visit.');
+    await page.locator('textarea[name="l:profile.pricingApproach:ar"]').fill('يتم الاتفاق على الأسعار في الزيارة الأولى.');
+    await page.getByRole('button', { name: /Save business/ }).click();
+    await expect(page.getByRole('status')).toContainText('Saved');
+    await page.getByRole('link', { name: 'Author', exact: true }).click();
+    await page.locator('textarea[name="l:author.bio:en"]').fill('Published by the Acme Dental clinic team.');
+    await page.locator('textarea[name="l:author.bio:ar"]').fill('تنشر هذا الموقع عيادة أكمي للأسنان.');
+    await page.getByRole('button', { name: /Save author/ }).click();
+    await expect(page.getByRole('status')).toContainText('Saved');
+
     await page.getByRole('link', { name: 'Setup checklist' }).click();
     await page.getByRole('button', { name: 'Launch business' }).click();
     await expect(page.getByRole('status')).toContainText('active');

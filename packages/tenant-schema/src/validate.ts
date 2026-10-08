@@ -36,6 +36,29 @@ function walkLocalized(node: unknown, path: string, fn: (value: Record<string, u
   }
 }
 
+/**
+ * Text the blank template ships with. A business that is switched to active while any of this is still
+ * in its config would publish template instructions to the public, so that blocks launching.
+ */
+export const PLACEHOLDER_MARKERS = [
+  'one sentence that says what you do',
+  'describe what the business does',
+  'describe who this business serves',
+  'a short description of this service',
+  'explain how pricing works',
+  'a short, real description of who writes',
+  'replace this with a direct answer',
+  'example business',
+];
+
+/**
+ * FAQ answer length target in words. Arabic needs fewer words than English for the same content,
+ * so its window is lower. Other languages use the English window.
+ */
+export function faqWordRange(lang: string): [number, number] {
+  return lang.split('-')[0] === 'ar' ? [30, 60] : [40, 60];
+}
+
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -97,14 +120,30 @@ export function validateTenant(raw: unknown): ValidationResult {
   }
 
   if (tenant.status === 'active') {
+    // Template placeholder text must never go live.
+    const everything: Array<[string, unknown]> = [
+      ['identity', tenant.identity],
+      ['profile', tenant.profile],
+      ['faq', tenant.faq],
+      ['author', tenant.author],
+      ['voice', tenant.voice],
+      ['legal', tenant.legal],
+    ];
+    for (const [path, node] of everything) {
+      for (const text of collectStrings(node)) {
+        const hit = PLACEHOLDER_MARKERS.find((m) => text.toLowerCase().includes(m));
+        if (hit) errors.push({ path, message: `Still contains template placeholder text ("${text.slice(0, 60)}"). Replace it before launching.` });
+      }
+    }
     if (tenant.faq.length < 15 || tenant.faq.length > 25) {
       warnings.push({ path: 'faq', message: `Active tenants should have 15 to 25 FAQs (found ${tenant.faq.length})` });
     }
     tenant.faq.forEach((item, i) => {
       for (const [lang, answer] of Object.entries(item.answer)) {
         const words = wordCount(answer);
-        if (words < 40 || words > 60) {
-          warnings.push({ path: `faq[${i}].answer.${lang}`, message: `FAQ answers should be 40 to 60 words (found ${words})` });
+        const [min, max] = faqWordRange(lang);
+        if (words < min || words > max) {
+          warnings.push({ path: `faq[${i}].answer.${lang}`, message: `FAQ answers should be ${min} to ${max} words in ${lang} (found ${words})` });
         }
       }
     });

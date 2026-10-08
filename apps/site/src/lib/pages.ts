@@ -1,5 +1,6 @@
 import type { SitemapPage } from '@avp/seo';
-import { hasLegal, locales, pageEnabled, tenant } from './tenant.ts';
+import { hasCatalog, hasLegal, locales, pageEnabled, tenant } from './tenant.ts';
+import { destinations, destinationsEnabled, fetchedDate, planItems } from './catalog.ts';
 import { allArticles } from './content.ts';
 
 /** Every indexable page (language-less paths), shared by sitemap.xml and llms.txt. */
@@ -11,6 +12,11 @@ export function sitePages(): Array<SitemapPage & { titleKey: string; title?: str
   if (pageEnabled('services') && tenant.profile.offerings.length > 0) {
     add('/services/', 'services');
     for (const o of tenant.profile.offerings) add(`/services/${o.id}/`, 'service', { title: o.id });
+  }
+  if (hasCatalog()) {
+    add('/plans/', 'plans', { lastmod: fetchedDate() });
+    for (const p of planItems()) add(`/plans/${p.id}/`, 'plan', { lastmod: fetchedDate() });
+    if (destinationsEnabled()) for (const d of destinations()) add(`/destinations/${d.slug}/`, 'destination', { lastmod: fetchedDate() });
   }
   if (pageEnabled('pricing')) add('/pricing/', 'pricing');
   if (pageEnabled('about')) add('/about/', 'about');

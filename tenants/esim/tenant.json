@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "id": "esim",
+  "status": "paused",
+  "identity": {
+    "name": "WainSim",
+    "domain": "wainsim.example",
+    "tagline": {
+      "en": "Travel eSIMs for trips to and from Saudi Arabia.",
+      "ar": "شرائح eSIM للسفر من وإلى المملكة العربية السعودية."
+    },
+    "brand": {
+      "colors": {
+        "primary": "#0f766e",
+        "accent": "#c2410c",
+        "background": "#ffffff",
+        "text": "#1a1a1a"
+      },
+      "fonts": {}
+    },
+    "showPlatformBrand": false
+  },
+  "languages": {
+    "default": "en",
+    "supported": [
+      "en",
+      "ar"
+    ]
+  },
+  "profile": {
+    "description": {
+      "en": "WainSim is a travel eSIM store for travellers, especially those travelling to and from Saudi Arabia.",
+      "ar": "وين سيم متجر شرائح eSIM للمسافرين، خاصة من يسافرون من وإلى المملكة العربية السعودية."
+    },
+    "audience": {
+      "en": "Travellers, especially to and from Saudi Arabia.",
+      "ar": "المسافرون، خاصة من وإلى المملكة العربية السعودية."
+    },
+    "geography": [
+      "Saudi Arabia"
+    ],
+    "differentiators": {},
+    "offerings": [
+      {
+        "id": "travel-esim-plans",
+        "name": {
+          "en": "Travel eSIM plans",
+          "ar": "باقات eSIM للسفر"
+        },
+        "summary": {
+          "en": "Mobile data plans for travellers, installed on a phone that supports eSIM.",
+          "ar": "باقات بيانات جوال للمسافرين، تُثبَّت على هاتف يدعم eSIM."
+        }
+      }
+    ]
+  },
+  "personas": [
+    {
+      "id": "visitor-to-saudi",
+      "name": {
+        "en": "Traveller visiting Saudi Arabia",
+        "ar": "مسافر يزور المملكة العربية السعودية"
+      },
+      "painPoints": {
+        "en": [
+          "Not sure whether their phone supports eSIM",
+          "Wanting mobile data as soon as they land",
+          "Roaming charges from their home provider"
+        ],
+        "ar": [
+          "عدم التأكد من أن هاتفهم يدعم eSIM",
+          "الرغبة في الحصول على بيانات الجوال فور الوصول",
+          "رسوم التجوال من مزود الخدمة في بلدهم"
+        ]
+      }
+    },
+    {
+      "id": "resident-travelling-abroad",
+      "name": {
+        "en": "Saudi resident travelling abroad",
+        "ar": "مقيم في السعودية يسافر إلى الخارج"
+      },
+      "painPoints": {
+        "en": [
+          "High roaming costs abroad",
+          "Choosing the right plan for the destination",
+          "Setting up an eSIM before the trip"
+        ],
+        "ar": [
+          "ارتفاع تكاليف التجوال في الخارج",
+          "اختيار الباقة المناسبة للوجهة",
+          "إعداد eSIM قبل الرحلة"
+        ]
+      }
+    }
+  ],
+  "pillars": [
+    "eSIM basics and phone compatibility",
+    "Mobile data for trips to Saudi Arabia",
+    "Mobile data for Saudi residents travelling abroad"
+  ],
+  "questionTypes": [
+    "What is...",
+    "How do I...",
+    "Does my phone support...",
+    "X vs Y"
+  ],
+  "competitors": [
+    {
+      "name": "Airalo",
+      "domain": "airalo.com"
+    },
+    {
+      "name": "Holafly",
+      "domain": "holafly.com"
+    }
+  ],
+  "keywords": [
+    "eSIM Saudi Arabia",
+    "travel eSIM",
+    "eSIM for visitors to Saudi Arabia"
+  ],
+  "voice": {
+    "tone": {
+      "en": "Friendly, clear and practical. Plain language, no hype.",
+      "ar": "ودودة وواضحة وعملية. لغة بسيطة دون مبالغة."
+    },
+    "dos": [
+      "Lead with the direct answer",
+      "Explain device compatibility early",
+      "Cite sources with dates"
+    ],
+    "donts": [
+      "Promise coverage or speed in any country",
+      "Invent statistics or testimonials",
+      "Criticise named competitors"
+    ],
+    "bannedClaims": [
+      "guaranteed coverage",
+      "works everywhere",
+      "fastest network",
+      "best coverage",
+      "guaranteed speed",
+      "unlimited everywhere"
+    ]
+  },
+  "author": {
+    "policy": "organization",
+    "name": "WainSim",
+    "bio": {
+      "en": "Published by WainSim.",
+      "ar": "تنشر هذا الموقع WainSim."
+    }
+  },
+  "faq": [
+    {
+      "question": {
+        "en": "What is an eSIM?",
+        "ar": "ما هي شريحة eSIM؟"
+      },
+      "answer": {
+        "en": "An eSIM is a SIM that is built into your phone, so you can add a mobile data plan without inserting a physical card. You buy a plan, scan a QR code or follow the steps in the app, and the plan is installed on the phone. It only works on devices that support eSIM.",
+        "ar": "شريحة eSIM هي شريحة مدمجة في هاتفك، لذلك يمكنك إضافة باقة بيانات جوال دون إدخال بطاقة فعلية. تشتري الباقة ثم تمسح رمز الاستجابة السريعة أو تتبع الخطوات في التطبيق، فتُثبَّت الباقة على الهاتف. وهي تعمل فقط على الأجهزة التي تدعم eSIM."
+      }
+    },
+    {
+      "question": {
+        "en": "How do I know if my phone supports eSIM?",
+        "ar": "كيف أعرف إن كان هاتفي يدعم eSIM؟"
+      },
+      "answer": {
+        "en": "Look in your phone settings for an option such as Add eSIM or Add mobile plan, or check your exact model in the manufacturer specifications. The phone must also be carrier unlocked, because a locked phone may refuse a plan from another provider. Check this before you buy.",
+        "ar": "ابحث في إعدادات هاتفك عن خيار مثل إضافة eSIM أو إضافة باقة جوال، أو راجع مواصفات طراز هاتفك لدى الشركة المصنعة. ويجب أيضاً أن يكون الهاتف غير مقفل على مشغل واحد، لأن الهاتف المقفل قد يرفض باقة من مزود آخر. تحقق من ذلك قبل الشراء."
+      }
+    },
+    {
+      "question": {
+        "en": "Do I need to remove my regular SIM?",
+        "ar": "هل أحتاج إلى إزالة شريحتي العادية؟"
+      },
+      "answer": {
+        "en": "No. Most phones with eSIM can keep the physical SIM active while using an eSIM, so you can keep your usual number for calls and messages and use the eSIM for mobile data. The exact setup differs by model, so check the dual SIM settings on your phone.",
+        "ar": "لا. تستطيع معظم الهواتف التي تدعم eSIM إبقاء الشريحة الفعلية مفعّلة أثناء استخدام eSIM، فيمكنك الاحتفاظ برقمك المعتاد للمكالمات والرسائل واستخدام eSIM لبيانات الجوال. يختلف الإعداد حسب الطراز، لذا راجع إعدادات الشريحتين في هاتفك."
+      }
+    },
+    {
+      "question": {
+        "en": "When should I install my eSIM?",
+        "ar": "متى يجب أن أثبّت شريحة eSIM؟"
+      },
+      "answer": {
+        "en": "Install it before you travel, while you still have Wi-Fi, because setup usually needs an internet connection. Some plans only start counting their validity period once the eSIM connects to a network at the destination, but check the terms of the plan you choose.",
+        "ar": "ثبّتها قبل السفر وأنت ما زلت متصلاً بشبكة واي فاي، لأن الإعداد يحتاج عادةً إلى اتصال بالإنترنت. تبدأ بعض الباقات باحتساب مدة الصلاحية فقط عندما تتصل الشريحة بشبكة في الوجهة، لكن راجع شروط الباقة التي تختارها."
+      }
+    },
+    {
+      "question": {
+        "en": "Will an eSIM work in every country?",
+        "ar": "هل تعمل eSIM في كل دولة؟"
+      },
+      "answer": {
+        "en": "Not necessarily. Each plan lists the countries or regions it covers, and coverage and speed depend on the local network and your device. Check the destination list of the plan before you buy, and do not assume that a plan for one country will work in another.",
+        "ar": "ليس بالضرورة. تذكر كل باقة الدول أو المناطق التي تغطيها، وتعتمد التغطية والسرعة على الشبكة المحلية وجهازك. راجع قائمة الوجهات في الباقة قبل الشراء، ولا تفترض أن باقة دولة واحدة ستعمل في دولة أخرى."
+      }
+    }
+  ],
+  "integrations": {
+    "analytics": {
+      "provider": "none"
+    },
+    "feeds": [
+      {
+        "id": "wholesaler",
+        "type": "api",
+        "secretName": "WAINSIM_WHOLESALER_API_KEY"
+      }
+    ],
+    "indexNowKey": "89a9afd36a0041579829204eaa87d301"
+  },
+  "agent": {
+    "articlesPerDay": 1,
+    "publishMode": "approval",
+    "paused": true,
+    "monthlyBudgetUsd": 20
+  },
+  "crawlers": {
+    "allowAI": true,
+    "overrides": {}
+  },
+  "trackerPrompts": [
+    "What is the best eSIM for visiting Saudi Arabia?",
+    "Which eSIM should I buy for a trip from Saudi Arabia?",
+    "How do I get mobile data in Saudi Arabia as a tourist?",
+    "Is an eSIM worth it for travel?"
+  ],
+  "compliance": {
+    "neverClaim": [
+      "guaranteed coverage in every country",
+      "guaranteed network speed",
+      "guaranteed device compatibility"
+    ]
+  },
+  "site": {
+    "modules": {
+      "catalog": true,
+      "locations": true
+    },
+    "catalogNote": {
+      "en": "Coverage and speed depend on the local network and your device. Check that your phone supports eSIM before you buy.",
+      "ar": "تعتمد التغطية والسرعة على الشبكة المحلية وجهازك. تأكد من أن هاتفك يدعم eSIM قبل الشراء."
+    }
+  }
+}

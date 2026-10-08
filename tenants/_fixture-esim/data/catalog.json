@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "fetchedAt": "2026-10-08T14:23:22.885Z",
+  "items": [
+    {
+      "id": "exampleland-3gb",
+      "name": "3 GB",
+      "destination": "Exampleland",
+      "dataGb": 3,
+      "validityDays": 15,
+      "price": 8.25,
+      "currency": "USD"
+    },
+    {
+      "id": "exampleland-unl",
+      "name": "Unlimited, 3 days",
+      "destination": "Exampleland",
+      "dataGb": null,
+      "validityDays": 3,
+      "price": 9.99,
+      "currency": "USD"
+    },
+    {
+      "id": "testland-1gb",
+      "name": "1 GB",
+      "destination": "Testland",
+      "dataGb": 1,
+      "validityDays": 7,
+      "price": 4.5,
+      "currency": "USD",
+      "url": "https://shop.fixture-esim.test/buy/testland-1gb"
+    },
+    {
+      "id": "testland-5gb",
+      "name": "5 GB",
+      "destination": "Testland",
+      "dataGb": 5,
+      "validityDays": 30,
+      "price": 12,
+      "currency": "USD",
+      "url": "https://shop.fixture-esim.test/buy/testland-5gb"
+    }
+  ]
+}

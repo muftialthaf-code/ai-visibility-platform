@@ -8,6 +8,7 @@ import { FsStore, activeTenants, getTenant, runnableTenants } from '@avp/tenant-
 import { auditSite } from './audit.ts';
 import { need, parseArgs, strFlag, type ParsedArgs } from './args.ts';
 import { changedUrls, planDeploys, toMatrix } from './plan.ts';
+import { feedCommand } from './feed.ts';
 import { tenantCommand } from './tenant.ts';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -41,6 +42,12 @@ const commands: Record<string, Command> = {
   async tenant(args, store) {
     const [sub, ...rest] = args.positional;
     return tenantCommand(sub, { ...args, positional: rest }, store);
+  },
+
+  /** feed sync <tenant> */
+  async feed(args, store) {
+    const [sub, ...rest] = args.positional;
+    return feedCommand(sub, { ...args, positional: rest }, store);
   },
 
   /** site build <tenant> */

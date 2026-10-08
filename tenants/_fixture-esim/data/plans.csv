@@ -1,0 +1,6 @@
+id,name,destination,data_gb,validity_days,price,currency,url
+testland-1gb,"1 GB",Testland,1,7,4.50,USD,https://shop.fixture-esim.test/buy/testland-1gb
+testland-5gb,"5 GB",Testland,5,30,12.00,USD,https://shop.fixture-esim.test/buy/testland-5gb
+exampleland-unl,"Unlimited, 3 days",Exampleland,unlimited,3,9.99,USD,
+exampleland-3gb,"3 GB",Exampleland,3,15,8.25,USD,
+this-row-is-broken,"Broken",Exampleland,3,15,not-a-price,USD,

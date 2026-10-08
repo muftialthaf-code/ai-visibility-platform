@@ -1,0 +1,46 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { product } from '@avp/seo';
+import { catalogNote, describePlan, fetchedDate, formatData, formatPrice, formatValidity, planItems, planName } from '../../../lib/catalog.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { hasCatalog, href, pathsFor, tenant, url } from '../../../lib/tenant.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  if (!hasCatalog()) return [];
+  return pathsFor(planItems(), (p) => ({ id: p.id }));
+}
+
+const { lang, item } = Astro.props;
+const t = ui(lang);
+const name = planName(item, lang);
+const path = `/plans/${item.id}/`;
+const description = describePlan(item, lang);
+const note = catalogNote(lang);
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={name}
+  description={description}
+  jsonld={[
+    product({ name, description, url: url(path, lang), price: item.price, currency: item.currency, offerUrl: item.url, brand: tenant.identity.name }),
+    crumbs(lang, [{ name: t.plans, path: '/plans/' }, { name, path }]),
+  ]}
+>
+  <h1>{name}</h1>
+  <p class="lede">{description}</p>
+  <table>
+    <tbody>
+      <tr><th scope="row">{t.destination}</th><td>{item.destination}</td></tr>
+      <tr><th scope="row">{t.data}</th><td>{formatData(item, lang)}</td></tr>
+      <tr><th scope="row">{t.validity}</th><td>{formatValidity(item, lang)}</td></tr>
+      <tr><th scope="row">{t.price}</th><td>{formatPrice(item.price, item.currency, lang)}</td></tr>
+    </tbody>
+  </table>
+  {item.url && <p><a class="btn" href={item.url} rel="noopener">{t.buy}</a></p>}
+  <p class="meta">{t.pricesUpdated}: {fetchedDate()}. {t.pricesMayChange}</p>
+  {note && <p>{note}</p>}
+  <p><a href={href('/plans', lang)}>{t.allPlans}</a></p>
+</Base>

@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@avp/feeds": "workspace:*",
     "@avp/seo": "workspace:*",
     "@avp/tenant-schema": "workspace:*",
     "astro": "5.18.2",

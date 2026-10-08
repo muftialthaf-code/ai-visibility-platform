@@ -1,0 +1,29 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PlansTable from '../../../components/PlansTable.astro';
+import { catalogNote, destinations, destinationsEnabled, fetchedDate, planItems } from '../../../lib/catalog.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { hasCatalog, href, pathsFor, tenant, tr } from '../../../lib/tenant.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return hasCatalog() ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const note = catalogNote(lang);
+---
+
+<Base lang={lang} path="/plans/" title={t.plans} description={tr(tenant.profile.description, lang)} jsonld={[crumbs(lang, [{ name: t.plans, path: '/plans/' }])]}>
+  <h1>{t.plans}</h1>
+  <PlansTable items={planItems()} lang={lang} />
+  <p class="meta">{t.pricesUpdated}: {fetchedDate()}. {t.pricesMayChange}</p>
+  {note && <p>{note}</p>}
+  {destinationsEnabled() && (
+    <>
+      <h2>{t.browseDestinations}</h2>
+      <ul>{destinations().map((d) => <li><a href={href(`/destinations/${d.slug}`, lang)}>{d.name}</a> ({d.items.length})</li>)}</ul>
+    </>
+  )}
+</Base>

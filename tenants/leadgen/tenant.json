@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "id": "leadgen",
+  "status": "paused",
+  "identity": {
+    "name": "Lead Generation Engine",
+    "domain": "leadgen.example",
+    "tagline": {
+      "en": "Lead generation for Saudi e-commerce businesses.",
+      "ar": "توليد العملاء المحتملين لمتاجر التجارة الإلكترونية في السعودية."
+    },
+    "brand": {
+      "colors": {
+        "primary": "#0b5cad",
+        "accent": "#d97706",
+        "background": "#ffffff",
+        "text": "#1a1a1a"
+      },
+      "fonts": {}
+    },
+    "showPlatformBrand": false
+  },
+  "languages": {
+    "default": "en",
+    "supported": [
+      "en",
+      "ar"
+    ]
+  },
+  "profile": {
+    "description": {
+      "en": "Lead Generation Engine is a lead generation service from PAX Insyte that focuses on e-commerce verticals in Saudi Arabia.",
+      "ar": "محرك توليد العملاء المحتملين خدمة من PAX Insyte تركّز على قطاعات التجارة الإلكترونية في المملكة العربية السعودية."
+    },
+    "audience": {
+      "en": "Saudi e-commerce owners and marketing leads.",
+      "ar": "أصحاب المتاجر الإلكترونية ومسؤولو التسويق في السعودية."
+    },
+    "geography": [
+      "Saudi Arabia"
+    ],
+    "differentiators": {},
+    "offerings": [
+      {
+        "id": "lead-generation",
+        "name": {
+          "en": "Lead generation for e-commerce",
+          "ar": "توليد العملاء المحتملين للتجارة الإلكترونية"
+        },
+        "summary": {
+          "en": "Lead generation aimed at Saudi e-commerce verticals.",
+          "ar": "خدمة توليد عملاء محتملين موجهة إلى قطاعات التجارة الإلكترونية في السعودية."
+        }
+      }
+    ]
+  },
+  "personas": [
+    {
+      "id": "ecommerce-owner",
+      "name": {
+        "en": "Saudi e-commerce owner",
+        "ar": "صاحب متجر إلكتروني في السعودية"
+      },
+      "painPoints": {
+        "en": [
+          "Not enough qualified enquiries from the store",
+          "Unclear which marketing channels bring paying customers",
+          "The rising cost of winning each new customer"
+        ],
+        "ar": [
+          "قلة الاستفسارات المؤهلة القادمة إلى المتجر",
+          "عدم وضوح القنوات التسويقية التي تجلب عملاء يدفعون فعلاً",
+          "ارتفاع تكلفة كسب كل عميل جديد"
+        ]
+      }
+    },
+    {
+      "id": "marketing-lead",
+      "name": {
+        "en": "E-commerce marketing lead",
+        "ar": "مسؤول تسويق في متجر إلكتروني"
+      },
+      "painPoints": {
+        "en": [
+          "Proving which campaigns lead to sales",
+          "Following up with leads quickly enough",
+          "Reaching Arabic-speaking buyers with the right message"
+        ],
+        "ar": [
+          "إثبات الحملات التي تؤدي إلى مبيعات",
+          "متابعة العملاء المحتملين بالسرعة الكافية",
+          "الوصول إلى المشترين الناطقين بالعربية بالرسالة المناسبة"
+        ]
+      }
+    }
+  ],
+  "pillars": [
+    "Lead generation basics for online stores",
+    "Marketing in the Saudi e-commerce market",
+    "Measuring and following up on leads"
+  ],
+  "questionTypes": [
+    "How do I...",
+    "How much does ... cost",
+    "What is the best way to...",
+    "X vs Y"
+  ],
+  "competitors": [],
+  "keywords": [
+    "lead generation Saudi Arabia",
+    "e-commerce leads KSA",
+    "Saudi online store marketing"
+  ],
+  "voice": {
+    "tone": {
+      "en": "Clear, practical and direct. Plain language, no hype.",
+      "ar": "واضحة وعملية ومباشرة. لغة بسيطة دون مبالغة."
+    },
+    "dos": [
+      "Lead with the direct answer",
+      "Use specific, verifiable examples",
+      "Cite sources with dates"
+    ],
+    "donts": [
+      "Promise specific lead numbers or sales",
+      "Invent statistics or testimonials",
+      "Criticise named competitors"
+    ],
+    "bannedClaims": [
+      "guaranteed leads",
+      "guaranteed sales",
+      "guaranteed results",
+      "guaranteed roi",
+      "#1 in saudi arabia",
+      "best in saudi arabia"
+    ]
+  },
+  "author": {
+    "policy": "organization",
+    "name": "PAX Insyte Solutions",
+    "bio": {
+      "en": "Published by PAX Insyte Solutions.",
+      "ar": "تنشر هذا الموقع PAX Insyte Solutions."
+    }
+  },
+  "faq": [],
+  "integrations": {
+    "analytics": {
+      "provider": "none"
+    },
+    "feeds": [],
+    "indexNowKey": "13c5f75ddfa54dd5b571d15bfe5829ac"
+  },
+  "agent": {
+    "articlesPerDay": 1,
+    "publishMode": "approval",
+    "paused": true,
+    "monthlyBudgetUsd": 20
+  },
+  "crawlers": {
+    "allowAI": true,
+    "overrides": {}
+  },
+  "trackerPrompts": [
+    "What is the best lead generation service for e-commerce stores in Saudi Arabia?",
+    "How can a Saudi online store get more qualified leads?",
+    "Which agencies generate leads for Saudi e-commerce businesses?",
+    "ما أفضل خدمة لتوليد العملاء المحتملين للمتاجر الإلكترونية في السعودية؟"
+  ],
+  "compliance": {
+    "neverClaim": [
+      "guaranteed lead volume",
+      "guaranteed return on investment",
+      "guaranteed search rankings"
+    ]
+  }
+}

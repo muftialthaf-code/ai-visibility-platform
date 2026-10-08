@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "id": "social",
+  "status": "paused",
+  "identity": {
+    "name": "Social Media Management Service",
+    "domain": "social.example",
+    "tagline": {
+      "en": "Managed LinkedIn content for founders, executives and B2B firms.",
+      "ar": "محتوى لينكدإن مُدار لأصحاب الشركات والمديرين التنفيذيين وشركات B2B."
+    },
+    "brand": {
+      "colors": {
+        "primary": "#334155",
+        "accent": "#0d9488",
+        "background": "#ffffff",
+        "text": "#1a1a1a"
+      },
+      "fonts": {}
+    },
+    "showPlatformBrand": false
+  },
+  "languages": {
+    "default": "en",
+    "supported": [
+      "en",
+      "ar"
+    ]
+  },
+  "profile": {
+    "description": {
+      "en": "A managed service that automates LinkedIn content for founders, executives and B2B firms.",
+      "ar": "خدمة مُدارة تُؤتمت محتوى لينكدإن لأصحاب الشركات والمديرين التنفيذيين وشركات B2B."
+    },
+    "audience": {
+      "en": "Founders, executives and B2B firms.",
+      "ar": "أصحاب الشركات والمديرون التنفيذيون وشركات B2B."
+    },
+    "geography": [],
+    "differentiators": {},
+    "offerings": [
+      {
+        "id": "managed-linkedin-content",
+        "name": {
+          "en": "Managed LinkedIn content",
+          "ar": "إدارة محتوى لينكدإن"
+        },
+        "summary": {
+          "en": "Managed LinkedIn content automation for founders, executives and B2B firms.",
+          "ar": "أتمتة مُدارة لمحتوى لينكدإن لأصحاب الشركات والمديرين التنفيذيين وشركات B2B."
+        }
+      }
+    ]
+  },
+  "personas": [
+    {
+      "id": "founder",
+      "name": {
+        "en": "Founder",
+        "ar": "صاحب شركة"
+      },
+      "painPoints": {
+        "en": [
+          "No time to post consistently on LinkedIn",
+          "Unsure what to write about",
+          "Posts that get little engagement"
+        ],
+        "ar": [
+          "ضيق الوقت للنشر بانتظام على لينكدإن",
+          "عدم التأكد مما يجب الكتابة عنه",
+          "منشورات تحصل على تفاعل قليل"
+        ]
+      }
+    },
+    {
+      "id": "b2b-marketing-lead",
+      "name": {
+        "en": "B2B marketing lead",
+        "ar": "مسؤول تسويق في شركة B2B"
+      },
+      "painPoints": {
+        "en": [
+          "Keeping a steady posting schedule",
+          "Keeping a consistent voice across several executives",
+          "Linking LinkedIn activity to business results"
+        ],
+        "ar": [
+          "الحفاظ على جدول نشر منتظم",
+          "الحفاظ على أسلوب موحد بين عدة مديرين تنفيذيين",
+          "ربط نشاط لينكدإن بنتائج الأعمال"
+        ]
+      }
+    }
+  ],
+  "pillars": [
+    "LinkedIn content strategy for founders",
+    "Executive thought leadership on LinkedIn",
+    "B2B LinkedIn marketing"
+  ],
+  "questionTypes": [
+    "How do I...",
+    "How often should...",
+    "What should I post...",
+    "X vs Y"
+  ],
+  "competitors": [],
+  "keywords": [
+    "LinkedIn content management",
+    "LinkedIn content automation",
+    "LinkedIn for founders",
+    "B2B LinkedIn marketing"
+  ],
+  "voice": {
+    "tone": {
+      "en": "Professional, clear and practical. Plain language, no hype.",
+      "ar": "مهنية وواضحة وعملية. لغة بسيطة دون مبالغة."
+    },
+    "dos": [
+      "Lead with the direct answer",
+      "Use specific, verifiable examples",
+      "Cite sources with dates"
+    ],
+    "donts": [
+      "Promise follower growth, reach or leads",
+      "Invent statistics or testimonials",
+      "Criticise named competitors"
+    ],
+    "bannedClaims": [
+      "guaranteed followers",
+      "guaranteed growth",
+      "guaranteed leads",
+      "guaranteed reach",
+      "guaranteed engagement",
+      "go viral"
+    ]
+  },
+  "author": {
+    "policy": "organization",
+    "name": "PAX Insyte Solutions",
+    "bio": {
+      "en": "Published by PAX Insyte Solutions.",
+      "ar": "تنشر هذا الموقع PAX Insyte Solutions."
+    }
+  },
+  "faq": [],
+  "integrations": {
+    "analytics": {
+      "provider": "none"
+    },
+    "feeds": [],
+    "indexNowKey": "fcabadf25f3244dda3a026acd8a3ee34"
+  },
+  "agent": {
+    "articlesPerDay": 1,
+    "publishMode": "approval",
+    "paused": true,
+    "monthlyBudgetUsd": 20
+  },
+  "crawlers": {
+    "allowAI": true,
+    "overrides": {}
+  },
+  "trackerPrompts": [
+    "What is the best managed LinkedIn content service for founders?",
+    "How can executives stay consistent on LinkedIn without writing every post?",
+    "Which services manage LinkedIn content for B2B companies?"
+  ],
+  "compliance": {
+    "neverClaim": [
+      "guaranteed follower growth",
+      "guaranteed leads or sales from LinkedIn",
+      "guaranteed post reach"
+    ]
+  }
+}

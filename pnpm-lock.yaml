@@ -72,6 +72,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@avp/feeds':
+        specifier: workspace:*
+        version: link:../../packages/feeds
       '@avp/seo':
         specifier: workspace:*
         version: link:../../packages/seo
@@ -90,6 +93,9 @@ importers:
 
   cli:
     dependencies:
+      '@avp/feeds':
+        specifier: workspace:*
+        version: link:../packages/feeds
       '@avp/seo':
         specifier: workspace:*
         version: link:../packages/seo
@@ -112,6 +118,15 @@ importers:
       '@types/pg':
         specifier: 8.23.1
         version: 8.23.1
+
+  packages/feeds:
+    dependencies:
+      '@avp/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@avp/tenant-schema':
+        specifier: workspace:*
+        version: link:../tenant-schema
 
   packages/github:
     dependencies:

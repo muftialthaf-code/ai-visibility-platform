@@ -2,7 +2,7 @@
 
 A multi-tenant platform that makes any business easy for AI assistants and search engines to find, understand and recommend (AEO and GEO). Each business is a **tenant**: one config bundle in `/tenants/<id>`, from which the platform builds a complete, crawlable website. Nothing about any specific business is hardcoded in platform code.
 
-**Status: Phase 3 (dashboard v1).** Tenant schema, shared SEO package, one generic English and Arabic site template, the full tenant CLI, IndexNow, automatic staging and production deploys, and the control dashboard (sign-in with 2FA, overview, businesses, run history, settings). The article agent and tracker come in later phases (see [Roadmap](#roadmap)).
+**Status: Phase 4 (seed tenants).** Tenant schema, shared SEO package, one generic English and Arabic site template, the full tenant CLI, IndexNow, automatic staging and production deploys, and the control dashboard (sign-in with 2FA, overview, businesses, run history, settings). The article agent and tracker come in later phases (see [Roadmap](#roadmap)).
 
 ## Requirements
 
@@ -39,6 +39,7 @@ pnpm avp site build <id> [--staging]
 pnpm avp validate [id]                # schema and banned-claim checks
 pnpm avp audit [id]                   # AEO/GEO checks on a built site
 pnpm avp matrix --kind deploy|agent|ci [--changed-since <sha>]   # GitHub Actions matrices
+pnpm avp feed sync <id> [--dry-run]    # rebuild data/catalog.json from the tenant's feeds
 pnpm avp indexnow ping <id> --urls <a,b> [--dry-run]
 ```
 
@@ -68,6 +69,33 @@ Add `--commit` to any command that changes tenants to commit the change in git. 
 
 **Tests:** `pnpm --filter @avp/dashboard test` (unit) and `pnpm --filter @avp/dashboard e2e` (Playwright, drives the production build against an in-memory fake GitHub; build first with `pnpm --filter @avp/dashboard build`).
 
+## Plan catalog module (for stores such as the eSIM tenant)
+
+Switch it on with `site.modules.catalog` (and `site.modules.locations` for a page per destination). The site shows a plans table, one page per plan with `Product` and `Offer` schema, and destination pages. Nothing is published until `tenants/<id>/data/catalog.json` has plans.
+
+**Sites never call the supplier.** `pnpm avp feed sync <id>` builds `data/catalog.json` from the tenant's feeds and commits it, so a build needs no supplier credentials and a supplier outage cannot break a deploy. Bad rows are skipped and reported. A feed where every row is invalid is refused, so a broken supplier response cannot wipe a live catalog.
+
+**CSV feed:** put `tenants/<id>/data/<feedId>.csv` in the repository with the columns `id, name, destination, data_gb, validity_days, price, currency, url` (`data_gb` may be `unlimited`; `id` and `url` are optional). Declare it as `{ "id": "plans", "type": "csv" }`.
+
+**API feed:**
+
+```json
+{
+  "id": "wholesaler",
+  "type": "api",
+  "url": "https://supplier.example/v1/plans",
+  "secretName": "SUPPLIER_API_KEY",
+  "authHeader": "Authorization",
+  "authScheme": "Bearer",
+  "mapping": {
+    "itemsPath": "data.plans",
+    "fields": { "id": "sku", "name": "title", "destination": "country", "dataGb": "gb", "validityDays": "days", "price": "cost", "currency": "cur" }
+  }
+}
+```
+
+The key is read from the `secretName` environment variable (or `SUPPLIER_API_KEY__<TENANT_ID>` for a tenant-specific key). Add a `site.catalogNote` for the coverage or compatibility line shown under prices.
+
 ## Repository layout
 
 | Path | What it is |
@@ -83,6 +111,7 @@ Add `--commit` to any command that changes tenants to commit the change in git. 
 | `packages/db` | Postgres access and migrations (users, audit log, runs, usage, settings). |
 | `packages/github` | GitHub client, the tenant store used by the dashboard, and an in-memory fake GitHub for tests. |
 | `packages/runtime` | Schedules, per-tenant secret lookup and the global settings shared by the dashboard and agent. |
+| `packages/feeds` | CSV and API plan feeds, normalisation and sync for the catalog module. |
 | `packages/tenant-ops` | Add, edit, pause, remove, export and roll back tenants. Used by the CLI now and the dashboard later. |
 | `cli` | The `pnpm avp` command (see below). |
 | `scripts` | Idempotent Cloudflare Pages project and custom-domain setup, used by the deploy workflow. |
@@ -159,7 +188,7 @@ In Phase 3 the dashboard does the same through a form and commits the result.
 1. Foundation (done)
 2. Cloud runtime and tenant system (done): automatic deploys, per-tenant Pages projects, IndexNow, full tenant CLI
 3. Dashboard v1 (done): login with 2FA, overview, Businesses, run history, settings
-4. Seed tenants launched as ordinary tenants
+4. Seed tenants (done as paused drafts: the three businesses are loaded as ordinary config; see each `tenants/<id>/README.md` for what is missing before launch)
 5. Article agent with the Review Queue (approval-first)
 6. Agent at scale: matrix schedule, alerts, budget caps, per-tenant cost
 7. AEO/GEO tracker and reports with PDF export

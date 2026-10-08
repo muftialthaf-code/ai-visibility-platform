@@ -13,6 +13,7 @@ import {
   hreflangAlternates,
   localizedPath,
   organization,
+  product,
   toScript,
   validateJsonLd,
   website,
@@ -47,6 +48,15 @@ describe('json-ld', () => {
 
   it('escapes script-closing sequences', () => {
     expect(toScript(organization({ name: '</script><b>', url: 'https://x.test' }))).not.toContain('</script>');
+  });
+});
+
+describe('product json-ld', () => {
+  it('builds a valid Product with an Offer and rejects one without a price', () => {
+    const p = product({ name: '5 GB for Turkey', description: 'd', url: 'https://x.test/plans/a/', price: 12.5, currency: 'USD' });
+    expect(validateJsonLd(p)).toEqual([]);
+    expect((p.offers as any).price).toBe('12.50');
+    expect(validateJsonLd({ ...p, offers: { '@type': 'Offer' } })).toContain('Product: offers needs a price and priceCurrency');
   });
 });
 

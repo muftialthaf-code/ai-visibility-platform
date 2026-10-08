@@ -144,6 +144,9 @@ export async function addTenant(store: TenantStore, input: AddTenantInput): Prom
   draft = reshapeLanguages(draft, languages, 'en') as Record<string, any>;
   draft.id = input.id;
   draft.status = 'paused';
+  // Start without the template's sample FAQ and service so none of it can reach a live site by accident.
+  draft.faq = [];
+  draft.profile = { ...draft.profile, offerings: [] };
   draft.identity.name = input.name;
   draft.identity.domain = input.domain;
   draft.languages = { default: defaultLanguage, supported: languages };

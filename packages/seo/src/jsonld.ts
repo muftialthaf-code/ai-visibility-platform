@@ -48,6 +48,34 @@ export function service(i: { name: string; description: string; url: string; pro
   });
 }
 
+export interface ProductInput {
+  name: string;
+  description: string;
+  url: string;
+  price: number;
+  currency: string;
+  /** Where the product can be bought, if different from the page itself. */
+  offerUrl?: string;
+  brand?: string;
+}
+
+export function product(i: ProductInput): JsonLd {
+  return strip({
+    '@context': CONTEXT,
+    '@type': 'Product',
+    name: i.name,
+    description: i.description,
+    url: i.url,
+    brand: i.brand ? { '@type': 'Brand', name: i.brand } : undefined,
+    offers: strip({
+      '@type': 'Offer',
+      price: i.price.toFixed(2),
+      priceCurrency: i.currency,
+      url: i.offerUrl ?? i.url,
+    }),
+  });
+}
+
 export function faqPage(items: Array<{ question: string; answer: string }>): JsonLd {
   return {
     '@context': CONTEXT,
@@ -128,6 +156,7 @@ const REQUIRED: Record<string, string[]> = {
   BreadcrumbList: ['itemListElement'],
   Person: ['name'],
   BlogPosting: ['headline', 'datePublished', 'author', 'publisher'],
+  Product: ['name', 'offers'],
 };
 
 /** Minimal structural validation: returns a list of problems (empty means valid). */
@@ -144,6 +173,10 @@ export function validateJsonLd(node: JsonLd): string[] {
     if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) {
       problems.push(`${node['@type']}: missing "${key}"`);
     }
+  }
+  if (node['@type'] === 'Product') {
+    const offer = node.offers as any;
+    if (!offer?.price || !offer?.priceCurrency) problems.push('Product: offers needs a price and priceCurrency');
   }
   if (node['@type'] === 'FAQPage' && Array.isArray(node.mainEntity)) {
     node.mainEntity.forEach((q: any, i: number) => {

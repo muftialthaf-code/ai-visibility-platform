@@ -26,6 +26,14 @@ import {
 } from './index.ts';
 
 const templateText = readFileSync(fileURLToPath(new URL('../../../tenants/_template/tenant.json', import.meta.url)), 'utf8');
+/** Replace the template's placeholder text so a business may be launched. */
+const makeReal = (store: MemoryStore, id: string) =>
+  updateTenant(store, id, {
+    identity: { tagline: { en: 'Real tagline.', ar: 'شعار حقيقي.' } },
+    profile: { description: { en: 'Real.', ar: 'حقيقي.' }, audience: { en: 'Real.', ar: 'حقيقي.' }, pricingApproach: null },
+    author: { bio: { en: 'Real.', ar: 'حقيقي.' } },
+  });
+
 const seeded = () => new MemoryStore({ 'tenants/_template/tenant.json': templateText });
 
 describe('addTenant', () => {
@@ -38,6 +46,8 @@ describe('addTenant', () => {
     expect(t.integrations.indexNowKey).toMatch(/^[a-f0-9]{32}$/);
     const raw = store.files.get('tenants/acme-dental/tenant.json')!;
     expect(raw).not.toContain('Example Business');
+    expect(t.faq).toEqual([]);
+    expect(t.profile.offerings).toEqual([]);
     expect(validateTenant(JSON.parse(raw)).ok).toBe(true);
     expect(store.commits.at(-1)?.message).toBe('Add tenant acme-dental');
   });
@@ -90,9 +100,17 @@ describe('updateTenant and friends', () => {
     await expect(updateTenant(store, 'a', { id: 'b' })).rejects.toThrow(/cannot be changed/);
   });
 
+  it('refuses to launch a business that still has template placeholder text', async () => {
+    const store = seeded();
+    await addTenant(store, { id: 'a', name: 'A', domain: 'a.example' });
+    await expect(setStatus(store, 'a', 'active')).rejects.toThrow(/invalid/);
+    expect((await getTenant(store, 'a')).status).toBe('paused');
+  });
+
   it('pause, resume and agent pause flip the right fields', async () => {
     const store = seeded();
     await addTenant(store, { id: 'a', name: 'A', domain: 'a.example' });
+    await makeReal(store, 'a');
     await setStatus(store, 'a', 'active');
     await setAgentPaused(store, 'a', false);
     const t = await getTenant(store, 'a');
@@ -112,6 +130,8 @@ describe('scheduling helpers', () => {
   it('only runs active tenants whose agent is not paused', async () => {
     const store = seeded();
     for (const id of ['live', 'agent-off', 'paused-site']) await addTenant(store, { id, name: id, domain: `${id}.example` });
+    await makeReal(store, 'live');
+    await makeReal(store, 'agent-off');
     await setStatus(store, 'live', 'active');
     await setAgentPaused(store, 'live', false);
     await setStatus(store, 'agent-off', 'active');

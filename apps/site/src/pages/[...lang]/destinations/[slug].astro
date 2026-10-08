@@ -1,0 +1,27 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PlansTable from '../../../components/PlansTable.astro';
+import { catalogNote, destinations, destinationsEnabled, fetchedDate } from '../../../lib/catalog.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { hasCatalog, href, pathsFor, tenant, tr } from '../../../lib/tenant.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  if (!hasCatalog() || !destinationsEnabled()) return [];
+  return pathsFor(destinations(), (d) => ({ slug: d.slug }));
+}
+
+const { lang, item: dest } = Astro.props;
+const t = ui(lang);
+const path = `/destinations/${dest.slug}/`;
+const title = `${t.plansFor} ${dest.name}`;
+const note = catalogNote(lang);
+---
+
+<Base lang={lang} path={path} title={title} description={`${title} | ${tr(tenant.identity.tagline, lang)}`} jsonld={[crumbs(lang, [{ name: t.plans, path: '/plans/' }, { name: dest.name, path }])]}>
+  <h1>{title}</h1>
+  <PlansTable items={dest.items} lang={lang} showDestination={false} />
+  <p class="meta">{t.pricesUpdated}: {fetchedDate()}. {t.pricesMayChange}</p>
+  {note && <p>{note}</p>}
+  <p><a href={href('/plans', lang)}>{t.allPlans}</a></p>
+</Base>

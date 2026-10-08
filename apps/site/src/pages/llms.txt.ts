@@ -13,13 +13,15 @@ export function GET() {
       ? tr(tenant.profile.offerings.find((o) => o.id === p.title)?.name, lang)
       : (t[p.titleKey as keyof typeof t] ?? p.titleKey);
 
-  const core = pages.filter((p) => !['service', 'article', 'privacy', 'terms'].includes(p.titleKey));
+  const core = pages.filter((p) => !['service', 'article', 'privacy', 'terms', 'plan', 'destination'].includes(p.titleKey));
+  const destinationPages = pages.filter((p) => p.titleKey === 'destination');
   const services = pages.filter((p) => p.titleKey === 'service');
   const legal = pages.filter((p) => p.titleKey === 'privacy' || p.titleKey === 'terms');
 
   const sections: LlmsSection[] = [
     { title: 'Pages', links: core.map((p) => ({ title: label(p), url: url(p.path, lang) })) },
     { title: t.services, links: services.map((p) => ({ title: label(p), url: url(p.path, lang) })) },
+    { title: t.destinations, links: destinationPages.map((p) => ({ title: p.path.split('/')[2]!.replace(/-/g, ' '), url: url(p.path, lang) })) },
     {
       title: t.blog,
       links: allArticles()
