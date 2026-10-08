@@ -1,0 +1,22 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { hasLegal, pathsFor, tenant, tr } from '../../../lib/tenant.ts';
+import { renderMarkdown } from '../../../lib/content.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  const docs = (['privacy', 'terms'] as const).filter((d) => hasLegal(d));
+  return pathsFor(docs, (d) => ({ doc: d }));
+}
+
+const { lang, item: doc } = Astro.props;
+const t = ui(lang);
+const title = doc === 'privacy' ? t.privacy : t.terms;
+const body = tr(tenant.legal[doc as 'privacy' | 'terms'], lang);
+---
+
+<Base lang={lang} path={`/legal/${doc}/`} title={title} description={`${title} | ${tenant.identity.name}`} jsonld={[crumbs(lang, [{ name: title, path: `/legal/${doc}/` }])]}>
+  <h1>{title}</h1>
+  <div set:html={renderMarkdown(body)} />
+</Base>

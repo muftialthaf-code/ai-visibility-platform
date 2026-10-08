@@ -1,0 +1,120 @@
+---
+import { aiReferralScript, direction, hreflangAlternates, localizedPath, absoluteUrl, toScript, type JsonLd } from '@avp/seo';
+import { hasLegal, href, isStaging, locales, navItems, siteUrl, tenant, tr } from '../lib/tenant.ts';
+import { LANGUAGE_NAMES, ui } from '../lib/i18n.ts';
+
+interface Props {
+  lang: string;
+  /** Path without a language prefix, e.g. "/faq/". */
+  path: string;
+  title: string;
+  description: string;
+  jsonld?: JsonLd[];
+  ogType?: 'website' | 'article';
+  /** Languages this page exists in (defaults to all). */
+  languages?: string[];
+  noindex?: boolean;
+}
+
+const { lang, path, title, description, jsonld = [], ogType = 'website', languages = locales.supported, noindex = false } = Astro.props;
+const t = ui(lang);
+const dir = direction(lang);
+const pageLocales = { default: languages.includes(locales.default) ? locales.default : languages[0]!, supported: languages };
+const canonical = absoluteUrl(siteUrl, localizedPath(path, lang, locales));
+const alternates = hreflangAlternates(siteUrl, path, pageLocales).map((a) => ({
+  ...a,
+  href: absoluteUrl(siteUrl, localizedPath(path, a.hreflang === 'x-default' ? pageLocales.default : a.hreflang, locales)),
+}));
+const brand = tenant.identity.brand;
+const fonts = brand.fonts;
+const fullTitle = path === '/' ? title : `${title} | ${tenant.identity.name}`;
+const analytics = tenant.integrations.analytics;
+const nav = navItems();
+---
+
+<!doctype html>
+<html lang={lang} dir={dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {alternates.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}
+    {(noindex || isStaging) && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={tenant.identity.name} />
+    <meta property="og:locale" content={lang} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <link rel="alternate" type="application/rss+xml" title={`${tenant.identity.name} RSS`} href={`${siteUrl}/rss.xml`} />
+    {jsonld.map((node) => <script type="application/ld+json" set:html={toScript(node)} />)}
+    {analytics.provider === 'plausible' && <script defer data-domain={analytics.id ?? tenant.identity.domain} src="https://plausible.io/js/script.js"></script>}
+    {analytics.provider === 'ga4' && analytics.id && <script async src={`https://www.googletagmanager.com/gtag/js?id=${analytics.id}`}></script>}
+    {analytics.provider === 'ga4' && analytics.id && <script set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${analytics.id}');`} />}
+    <script set:html={aiReferralScript()} />
+    <style
+      set:html={`
+:root{--primary:${brand.colors.primary};--accent:${brand.colors.accent};--bg:${brand.colors.background};--text:${brand.colors.text};
+--heading-font:${fonts.heading ? `"${fonts.heading}",` : ''}system-ui,-apple-system,"Segoe UI",Tahoma,"Noto Sans Arabic",sans-serif;
+--body-font:${fonts.body ? `"${fonts.body}",` : ''}system-ui,-apple-system,"Segoe UI",Tahoma,"Noto Sans Arabic",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:1.0625rem/1.65 var(--body-font)}
+h1,h2,h3{font-family:var(--heading-font);line-height:1.25}
+a{color:var(--primary)}
+.skip{position:absolute;inset-inline-start:-9999px}.skip:focus{inset-inline-start:1rem;top:1rem;background:var(--bg);padding:.5rem;z-index:10}
+.wrap{max-width:60rem;margin-inline:auto;padding-inline:1rem}
+header.site{border-block-end:1px solid color-mix(in srgb,var(--text) 15%,transparent);padding-block:.75rem}
+header.site .wrap{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;align-items:center;justify-content:space-between}
+.brand{font-weight:700;text-decoration:none;font-size:1.15rem}
+nav ul{list-style:none;display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin:0;padding:0}
+nav a{text-decoration:none}nav a[aria-current=page]{font-weight:700;text-decoration:underline}
+main{padding-block:2rem}
+.lede{font-size:1.25rem}
+.btn{display:inline-block;background:var(--primary);color:#fff;padding:.7rem 1.2rem;border-radius:.4rem;text-decoration:none;font-weight:600}
+.cards{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));padding:0;list-style:none}
+.card{border:1px solid color-mix(in srgb,var(--text) 18%,transparent);border-radius:.5rem;padding:1rem}
+.meta{opacity:.75;font-size:.9rem}
+footer.site{border-block-start:1px solid color-mix(in srgb,var(--text) 15%,transparent);padding-block:1.5rem;font-size:.9rem}
+footer.site ul{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem 1rem;padding:0;margin:.5rem 0}
+form label{display:block;margin-block:.75rem .25rem}
+form input,form textarea{width:100%;padding:.6rem;font:inherit;border:1px solid color-mix(in srgb,var(--text) 35%,transparent);border-radius:.3rem}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid color-mix(in srgb,var(--text) 20%,transparent);padding:.5rem;text-align:start}
+`}
+    />
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href={href('/', lang)}>{tenant.identity.name}</a>
+        <nav aria-label="Main">
+          <ul>
+            {nav.map((n) => (
+              <li><a href={href(n.path, lang)} aria-current={path.startsWith(n.path) ? 'page' : undefined}>{t[n.key as keyof typeof t]}</a></li>
+            ))}
+            {locales.supported.length > 1 && locales.supported.filter((l) => l !== lang && languages.includes(l)).map((l) => (
+              <li><a href={href(path, l)} hreflang={l} lang={l} aria-label={t.language}>{LANGUAGE_NAMES[l] ?? l}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main"><div class="wrap"><slot /></div></main>
+    <footer class="site">
+      <div class="wrap">
+        <p>{tr(tenant.identity.tagline, lang)}</p>
+        <ul>
+          {hasLegal('privacy') && <li><a href={href('/legal/privacy', lang)}>{t.privacy}</a></li>}
+          {hasLegal('terms') && <li><a href={href('/legal/terms', lang)}>{t.terms}</a></li>}
+        </ul>
+        <p>© {new Date().getFullYear()} {tenant.identity.name}</p>
+        {tenant.identity.showPlatformBrand && <p>{t.poweredBy} AI Visibility Platform</p>}
+      </div>
+    </footer>
+  </body>
+</html>

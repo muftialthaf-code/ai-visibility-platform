@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import { pageEnabled, pathsFor, tenant, tr } from '../../lib/tenant.ts';
+import { authorJsonLd, crumbs } from '../../lib/schema.ts';
+import { ui } from '../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('about') ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const diff = tenant.profile.differentiators[lang] ?? tenant.profile.differentiators[tenant.languages.default] ?? [];
+---
+
+<Base lang={lang} path="/about/" title={t.about} description={tr(tenant.profile.description, lang)} jsonld={[authorJsonLd(lang), crumbs(lang, [{ name: t.about, path: '/about/' }])]}>
+  <h1>{t.about} {tenant.identity.name}</h1>
+  <p class="lede">{tr(tenant.profile.description, lang)}</p>
+  {diff.length > 0 && <ul>{diff.map((d) => <li>{d}</li>)}</ul>}
+  <h2>{tenant.author.name}</h2>
+  <p>{tr(tenant.author.bio, lang)}</p>
+</Base>

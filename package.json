@@ -1,0 +1,23 @@
+{
+  "name": "ai-visibility-platform",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "tenant:validate": "tsx cli/src/index.ts validate",
+    "tenant:list": "tsx cli/src/index.ts list",
+    "audit:site": "tsx cli/src/index.ts audit",
+    "build:site": "pnpm --filter @avp/site build"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

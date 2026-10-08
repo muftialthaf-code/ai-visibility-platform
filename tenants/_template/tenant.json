@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "id": "_template",
+  "status": "paused",
+  "identity": {
+    "name": "Example Business",
+    "domain": "example.com",
+    "tagline": {
+      "en": "One sentence that says what you do and who it is for.",
+      "ar": "جملة واحدة توضح ما تقدمه ولمن تقدمه."
+    },
+    "brand": {
+      "colors": {
+        "primary": "#0a6b5a",
+        "accent": "#c2410c",
+        "background": "#ffffff",
+        "text": "#1a1a1a"
+      },
+      "fonts": {}
+    },
+    "showPlatformBrand": false
+  },
+  "languages": {
+    "default": "en",
+    "supported": ["en", "ar"]
+  },
+  "profile": {
+    "description": {
+      "en": "Describe what the business does in two or three plain sentences.",
+      "ar": "صف ما تقوم به الشركة في جملتين أو ثلاث جمل بسيطة."
+    },
+    "audience": {
+      "en": "Describe who this business serves.",
+      "ar": "صف الفئة التي تخدمها هذه الشركة."
+    },
+    "geography": [],
+    "differentiators": {},
+    "offerings": [
+      {
+        "id": "example-service",
+        "name": { "en": "Example service", "ar": "خدمة تجريبية" },
+        "summary": {
+          "en": "A short description of this service or product.",
+          "ar": "وصف مختصر لهذه الخدمة أو المنتج."
+        }
+      }
+    ],
+    "pricingApproach": {
+      "en": "Explain how pricing works, without guarantees.",
+      "ar": "اشرح كيف تعمل الأسعار دون تقديم ضمانات."
+    }
+  },
+  "personas": [],
+  "pillars": [],
+  "questionTypes": [],
+  "competitors": [],
+  "keywords": [],
+  "voice": {
+    "tone": { "en": "Clear, direct and helpful.", "ar": "واضح ومباشر ومفيد." },
+    "dos": [],
+    "donts": [],
+    "bannedClaims": ["guaranteed results", "#1 in the world"]
+  },
+  "author": {
+    "policy": "organization",
+    "name": "Example Business Team",
+    "bio": {
+      "en": "A short, real description of who writes for this site.",
+      "ar": "وصف قصير وحقيقي لمن يكتب لهذا الموقع."
+    }
+  },
+  "faq": [
+    {
+      "question": { "en": "What does Example Business do?", "ar": "ماذا تقدم الشركة؟" },
+      "answer": {
+        "en": "Replace this with a direct answer first, then a little context. Keep it between forty and sixty words for active tenants.",
+        "ar": "استبدل هذا بإجابة مباشرة أولاً ثم بعض السياق. اجعلها بين أربعين وستين كلمة للمواقع النشطة."
+      }
+    }
+  ],
+  "integrations": {
+    "analytics": { "provider": "none" },
+    "feeds": []
+  },
+  "agent": {
+    "articlesPerDay": 1,
+    "publishMode": "approval",
+    "paused": true,
+    "monthlyBudgetUsd": 0
+  },
+  "crawlers": { "allowAI": true, "overrides": {} },
+  "trackerPrompts": [],
+  "compliance": { "neverClaim": ["guaranteed rankings"] }
+}

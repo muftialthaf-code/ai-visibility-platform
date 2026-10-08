@@ -1,0 +1,25 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { href, pageEnabled, pathsFor, tenant, tr } from '../../../lib/tenant.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('services') && tenant.profile.offerings.length > 0 ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+---
+
+<Base lang={lang} path="/services/" title={t.services} description={tr(tenant.profile.description, lang)} jsonld={[crumbs(lang, [{ name: t.services, path: '/services/' }])]}>
+  <h1>{t.services}</h1>
+  <ul class="cards">
+    {tenant.profile.offerings.map((o) => (
+      <li class="card">
+        <h2><a href={href(`/services/${o.id}`, lang)}>{tr(o.name, lang)}</a></h2>
+        <p>{tr(o.summary, lang)}</p>
+      </li>
+    ))}
+  </ul>
+</Base>

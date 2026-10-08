@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import { pageEnabled, pathsFor, tenant, tr } from '../../lib/tenant.ts';
+import { crumbs } from '../../lib/schema.ts';
+import { ui } from '../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('contact') ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const lead = tenant.integrations.leadForm;
+// Phase 1 supports plain email forms (no JavaScript, no backend). Webhook, sheet and CRM
+// destinations are wired up with the lead-capture endpoint when the seed tenants launch.
+const emailForm = lead?.type === 'email' ? lead.destination : undefined;
+---
+
+<Base lang={lang} path="/contact/" title={t.contact} description={tr(tenant.identity.tagline, lang)} jsonld={[crumbs(lang, [{ name: t.contact, path: '/contact/' }])]}>
+  <h1>{t.contact}</h1>
+  {emailForm ? (
+    <form action={`mailto:${emailForm}`} method="post" enctype="text/plain">
+      <label for="name">{t.yourName}</label>
+      <input id="name" name="name" required autocomplete="name" />
+      <label for="email">{t.yourEmail}</label>
+      <input id="email" name="email" type="email" required autocomplete="email" />
+      <label for="message">{t.yourMessage}</label>
+      <textarea id="message" name="message" rows="5" required></textarea>
+      <p><button class="btn" type="submit">{t.send}</button></p>
+    </form>
+  ) : (
+    <p>{t.leadNotConfigured}</p>
+  )}
+</Base>

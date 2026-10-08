@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import { href, pageEnabled, pathsFor, tenant, tr } from '../../lib/tenant.ts';
+import { siteLevelJsonLd } from '../../lib/schema.ts';
+import { ui } from '../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('home') ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const p = tenant.profile;
+---
+
+<Base lang={lang} path="/" title={tr(tenant.identity.tagline, lang)} description={tr(p.description, lang)} jsonld={siteLevelJsonLd(lang)}>
+  <h1>{tenant.identity.name}</h1>
+  <p class="lede">{tr(tenant.identity.tagline, lang)}</p>
+  <p>{tr(p.description, lang)}</p>
+  <h2>{t.whoFor}</h2>
+  <p>{tr(p.audience, lang)}</p>
+  {pageEnabled('contact') && <p><a class="btn" href={href('/contact', lang)}>{t.contactCta}</a></p>}
+  {pageEnabled('services') && p.offerings.length > 0 && (
+    <>
+      <h2>{t.services}</h2>
+      <ul class="cards">
+        {p.offerings.map((o) => (
+          <li class="card">
+            <h3><a href={href(`/services/${o.id}`, lang)}>{tr(o.name, lang)}</a></h3>
+            <p>{tr(o.summary, lang)}</p>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+</Base>

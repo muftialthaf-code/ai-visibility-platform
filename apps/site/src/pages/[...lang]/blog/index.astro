@@ -1,0 +1,32 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { href, pageEnabled, pathsFor, tenant, tr } from '../../../lib/tenant.ts';
+import { loadArticles } from '../../../lib/content.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('blog') ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const articles = loadArticles(lang);
+---
+
+<Base lang={lang} path="/blog/" title={t.blog} description={tr(tenant.profile.description, lang)} jsonld={[crumbs(lang, [{ name: t.blog, path: '/blog/' }])]}>
+  <h1>{t.blog}</h1>
+  {articles.length === 0 ? (
+    <p>{t.noArticles}</p>
+  ) : (
+    <ul class="cards">
+      {articles.map((a) => (
+        <li class="card">
+          <h2><a href={href(`/blog/${a.slug}`, lang)}>{a.title}</a></h2>
+          <p>{a.description}</p>
+          <p class="meta">{t.published}: {a.datePublished}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

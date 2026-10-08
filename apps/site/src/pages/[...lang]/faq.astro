@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import { faqPage } from '@avp/seo';
+import { pageEnabled, pathsFor, tenant, tr } from '../../lib/tenant.ts';
+import { crumbs } from '../../lib/schema.ts';
+import { ui } from '../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('faq') && tenant.faq.length > 0 ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const items = tenant.faq.map((f) => ({ question: tr(f.question, lang), answer: tr(f.answer, lang) }));
+---
+
+<Base
+  lang={lang}
+  path="/faq/"
+  title={t.faq}
+  description={items[0]?.answer ?? tr(tenant.profile.description, lang)}
+  jsonld={[faqPage(items), crumbs(lang, [{ name: t.faq, path: '/faq/' }])]}
+>
+  <h1>{t.faq}</h1>
+  {items.map((i) => (
+    <section>
+      <h2>{i.question}</h2>
+      <p>{i.answer}</p>
+    </section>
+  ))}
+</Base>

@@ -1,0 +1,39 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { href, pageEnabled, pathsFor, tenant, tr, url } from '../../../lib/tenant.ts';
+import { crumbs } from '../../../lib/schema.ts';
+import { service } from '@avp/seo';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  if (!pageEnabled('services')) return [];
+  return pathsFor(tenant.profile.offerings, (o) => ({ slug: o.id }));
+}
+
+const { lang, item } = Astro.props;
+const t = ui(lang);
+const name = tr(item.name, lang);
+const summary = tr(item.summary, lang);
+const path = `/services/${item.id}/`;
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={name}
+  description={summary}
+  jsonld={[
+    service({ name, description: summary, url: url(path, lang), providerName: tenant.identity.name, areaServed: tenant.profile.geography }),
+    crumbs(lang, [{ name: t.services, path: '/services/' }, { name, path }]),
+  ]}
+>
+  <h1>{name}</h1>
+  <p class="lede">{summary}</p>
+  {item.pricing && (
+    <>
+      <h2>{t.pricing}</h2>
+      <p>{tr(item.pricing, lang)}</p>
+    </>
+  )}
+  {pageEnabled('contact') && <p><a class="btn" href={href('/contact', lang)}>{t.contactCta}</a></p>}
+</Base>

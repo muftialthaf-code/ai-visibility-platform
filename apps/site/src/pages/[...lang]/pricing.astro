@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { href, pageEnabled, pathsFor, tenant, tr } from '../../lib/tenant.ts';
+import { crumbs } from '../../lib/schema.ts';
+import { ui } from '../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  return pageEnabled('pricing') ? pathsFor() : [];
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const priced = tenant.profile.offerings.filter((o) => o.pricing);
+---
+
+<Base lang={lang} path="/pricing/" title={t.howPricing} description={tr(tenant.profile.pricingApproach, lang) || t.noPricing} jsonld={[crumbs(lang, [{ name: t.pricing, path: '/pricing/' }])]}>
+  <h1>{t.howPricing}</h1>
+  <p class="lede">{tr(tenant.profile.pricingApproach, lang) || t.noPricing}</p>
+  {priced.length > 0 && (
+    <table>
+      <tbody>
+        {priced.map((o) => (
+          <tr><th scope="row">{tr(o.name, lang)}</th><td>{tr(o.pricing, lang)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+  {pageEnabled('contact') && <p><a class="btn" href={href('/contact', lang)}>{t.contactCta}</a></p>}
+</Base>

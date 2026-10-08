@@ -1,0 +1,52 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { blogPosting } from '@avp/seo';
+import { locales, pageEnabled, tenant, url } from '../../../lib/tenant.ts';
+import { allArticles } from '../../../lib/content.ts';
+import { authorJsonLd, crumbs } from '../../../lib/schema.ts';
+import { ui } from '../../../lib/i18n.ts';
+
+export function getStaticPaths() {
+  if (!pageEnabled('blog')) return [];
+  return allArticles().map((a) => ({
+    params: { lang: a.lang === locales.default ? undefined : a.lang, slug: a.slug },
+    props: { lang: a.lang, article: a },
+  }));
+}
+
+const { lang, article } = Astro.props;
+const t = ui(lang);
+const path = `/blog/${article.slug}/`;
+// Only languages that actually have this article get hreflang alternates.
+const languages = allArticles().filter((a) => a.slug === article.slug).map((a) => a.lang);
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={article.title}
+  description={article.description}
+  ogType="article"
+  languages={languages}
+  jsonld={[
+    blogPosting({
+      headline: article.title,
+      description: article.description,
+      url: url(path, lang),
+      datePublished: article.datePublished,
+      dateModified: article.dateModified,
+      inLanguage: lang,
+      authorName: tenant.author.name,
+      authorUrl: tenant.author.url,
+      publisherName: tenant.identity.name,
+    }),
+    authorJsonLd(lang),
+    crumbs(lang, [{ name: t.blog, path: '/blog/' }, { name: article.title, path }]),
+  ]}
+>
+  <article>
+    <h1>{article.title}</h1>
+    <p class="meta">{t.written} {tenant.author.name} · {t.updated}: {article.dateModified}</p>
+    <div set:html={article.html} />
+  </article>
+</Base>

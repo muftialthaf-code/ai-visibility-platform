@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "id": "_fixture-clinic",
+  "status": "paused",
+  "identity": {
+    "name": "Fixture Dental Clinic",
+    "domain": "fixture-clinic.test",
+    "tagline": {
+      "en": "One sentence that says what you do and who it is for."
+    },
+    "brand": {
+      "colors": {
+        "primary": "#1d4ed8",
+        "accent": "#c2410c",
+        "background": "#ffffff",
+        "text": "#1a1a1a"
+      },
+      "fonts": {}
+    },
+    "showPlatformBrand": false
+  },
+  "languages": {
+    "default": "en",
+    "supported": [
+      "en"
+    ]
+  },
+  "profile": {
+    "description": {
+      "en": "Describe what the business does in two or three plain sentences."
+    },
+    "audience": {
+      "en": "Describe who this business serves."
+    },
+    "geography": [],
+    "differentiators": {},
+    "offerings": [
+      {
+        "id": "example-service",
+        "name": {
+          "en": "Example service"
+        },
+        "summary": {
+          "en": "A short description of this service or product."
+        }
+      },
+      {
+        "id": "checkups",
+        "name": {
+          "en": "Check-ups"
+        },
+        "summary": {
+          "en": "Routine dental check-ups."
+        },
+        "pricing": {
+          "en": "Priced per visit."
+        }
+      }
+    ],
+    "pricingApproach": {
+      "en": "Explain how pricing works, without guarantees."
+    }
+  },
+  "personas": [],
+  "pillars": [],
+  "questionTypes": [],
+  "competitors": [],
+  "keywords": [],
+  "voice": {
+    "tone": {
+      "en": "Clear, direct and helpful."
+    },
+    "dos": [],
+    "donts": [],
+    "bannedClaims": [
+      "guaranteed results",
+      "#1 in the world"
+    ]
+  },
+  "author": {
+    "policy": "organization",
+    "name": "Example Business Team",
+    "bio": {
+      "en": "A short, real description of who writes for this site."
+    }
+  },
+  "faq": [
+    {
+      "question": {
+        "en": "What does Example Business do?"
+      },
+      "answer": {
+        "en": "Replace this with a direct answer first, then a little context. Keep it between forty and sixty words for active tenants."
+      }
+    }
+  ],
+  "integrations": {
+    "analytics": {
+      "provider": "none"
+    },
+    "feeds": [],
+    "leadForm": {
+      "type": "email",
+      "destination": "hello@fixture-clinic.test"
+    }
+  },
+  "agent": {
+    "articlesPerDay": 1,
+    "publishMode": "approval",
+    "paused": true,
+    "monthlyBudgetUsd": 0
+  },
+  "crawlers": {
+    "allowAI": true,
+    "overrides": {}
+  },
+  "trackerPrompts": [],
+  "compliance": {
+    "neverClaim": [
+      "guaranteed rankings"
+    ]
+  },
+  "legal": {
+    "privacy": {
+      "en": "# Privacy policy\n\nFixture text standing in for owner-supplied legal copy."
+    },
+    "terms": {
+      "en": "# Terms\n\nFixture text."
+    }
+  }
+}
