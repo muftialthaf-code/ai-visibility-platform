@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - cli
+  - agent
 onlyBuiltDependencies:
   - esbuild
   - sharp

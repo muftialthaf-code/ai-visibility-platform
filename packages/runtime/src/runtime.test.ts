@@ -53,6 +53,11 @@ describe('settings', () => {
     expect(g.defaultLanguage).toBe('en');
     expect(g.autoApproveMaxRisk).toBe(DEFAULT_GLOBALS.autoApproveMaxRisk);
   });
+  it('keeps a valid model id and falls back on junk', () => {
+    expect(parseGlobals({ authorModel: 'claude-sonnet-5-5' }).authorModel).toBe('claude-sonnet-5-5');
+    expect(parseGlobals({ authorModel: 'Not A Model!' }).authorModel).toBe(DEFAULT_GLOBALS.authorModel);
+    expect(parseGlobals({}).judgeModel).toBe('claude-sonnet-5-5');
+  });
   it('parses an email list from text, dropping invalid and duplicate addresses', () => {
     const n = parseNotifications({ emails: 'a@x.com, b@y.org; not-an-email\nA@x.com a@x.com', reminderAfterHours: 99999 });
     expect(n.emails).toEqual(['a@x.com', 'b@y.org']);

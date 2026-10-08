@@ -12,6 +12,10 @@ export interface GlobalDefaults {
   autoApproveMaxRisk: number;
   /** Minimum Flesch reading ease for English articles. */
   minReadability: number;
+  /** Model that researches and writes articles. */
+  authorModel: string;
+  /** Model that checks articles (voice, claims, defamation). Cheaper than the author model. */
+  judgeModel: string;
 }
 
 export interface NotificationSettings {
@@ -31,6 +35,8 @@ export const DEFAULT_GLOBALS: GlobalDefaults = {
   minSources: 2,
   autoApproveMaxRisk: 30,
   minReadability: 40,
+  authorModel: 'claude-opus-5-5',
+  judgeModel: 'claude-sonnet-5-5',
 };
 
 export const DEFAULT_NOTIFICATIONS: NotificationSettings = {
@@ -46,6 +52,9 @@ const num = (v: unknown, min: number, max: number, fallback: number) => {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 };
 
+/** A model id is lowercase letters, digits and hyphens (for example claude-opus-5-5). Anything else falls back. */
+const modelId = (v: unknown, fallback: string) => (typeof v === 'string' && /^[a-z0-9][a-z0-9.-]{2,60}$/.test(v.trim()) ? v.trim() : fallback);
+
 /** Merge stored or submitted values over the defaults, clamping everything to sane ranges. */
 export function parseGlobals(raw: unknown): GlobalDefaults {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
@@ -57,6 +66,8 @@ export function parseGlobals(raw: unknown): GlobalDefaults {
     minSources: Math.round(num(r.minSources, 0, 20, DEFAULT_GLOBALS.minSources)),
     autoApproveMaxRisk: num(r.autoApproveMaxRisk, 0, 100, DEFAULT_GLOBALS.autoApproveMaxRisk),
     minReadability: num(r.minReadability, 0, 100, DEFAULT_GLOBALS.minReadability),
+    authorModel: modelId(r.authorModel, DEFAULT_GLOBALS.authorModel),
+    judgeModel: modelId(r.judgeModel, DEFAULT_GLOBALS.judgeModel),
   };
 }
 

@@ -1,0 +1,13 @@
+{
+  "name": "@avp/content",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json", "test": "vitest run" },
+  "dependencies": {
+    "gray-matter": "4.0.3",
+    "marked": "18.1.0",
+    "zod": "4.6.5"
+  }
+}

@@ -8,7 +8,7 @@ export type Column = { key: string; label: string; kind: 'text' | 'textarea' | '
 
 export type Field =
   | { kind: 'text' | 'textarea' | 'color' | 'url' | 'email'; path: string; label: string; hint?: string; required?: boolean }
-  | { kind: 'number'; path: string; label: string; hint?: string; min?: number; max?: number; step?: number }
+  | { kind: 'number'; path: string; label: string; hint?: string; min?: number; max?: number; step?: number; /** A blank field saves null (removes the value). */ nullable?: boolean }
   | { kind: 'select'; path: string; label: string; options: Array<{ value: string; label: string }>; hint?: string; emptyIsNull?: boolean }
   | { kind: 'bool'; path: string; label: string; hint?: string }
   | { kind: 'lines'; path: string; label: string; hint?: string }
@@ -36,6 +36,8 @@ export const SECTIONS: Section[] = [
       { kind: 'select', path: 'agent.publishMode', label: 'Publishing', options: [{ value: 'approval', label: 'Approval first (articles wait in the Review Queue)' }, { value: 'auto', label: 'Auto-publish (articles that pass every check go live)' }], hint: 'Even in auto-publish, an article that fails any check is held for review.' },
       { kind: 'number', path: 'agent.articlesPerDay', label: 'Articles per day', min: 0, max: 10, step: 1 },
       { kind: 'number', path: 'agent.monthlyBudgetUsd', label: 'Monthly budget cap (USD)', min: 0, step: 1, hint: 'The agent stops for the month when spend reaches this amount. 0 means no cap.' },
+      { kind: 'number', path: 'agent.autoApproveMaxRisk', label: 'Auto-publish below this risk score', min: 0, max: 100, step: 5, nullable: true, hint: 'Approval-first mode only. Leave blank so every article waits for a person. When set, an article that passes every check with a risk score at or below this publishes without review.' },
+      { kind: 'lines', path: 'agent.articleLanguages', label: 'Write articles in these languages', hint: 'One code per line, for example en and ar. Blank means the default language only. Each language is written natively and costs a full article.' },
       { kind: 'number', path: 'agent.articleWords.min', label: 'Article length, minimum words', min: 100, max: 5000, step: 50 },
       { kind: 'number', path: 'agent.articleWords.max', label: 'Article length, maximum words', min: 100, max: 5000, step: 50 },
     ],
@@ -246,6 +248,7 @@ export function buildPatch(section: Section, data: FormData, languages: string[]
       case 'number': {
         const raw = str(fname(f.path)).trim();
         if (raw !== '') setByPath(patch, f.path, Number(raw));
+        else if (f.nullable) setByPath(patch, f.path, null);
         break;
       }
       case 'select': {

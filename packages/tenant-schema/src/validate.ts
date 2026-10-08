@@ -103,6 +103,10 @@ export function validateTenant(raw: unknown): ValidationResult {
     }
   });
 
+  for (const lang of tenant.agent.articleLanguages) {
+    if (!supported.includes(lang)) errors.push({ path: 'agent.articleLanguages', message: `"${lang}" is not in languages.supported` });
+  }
+
   // Banned claims must not appear in the tenant's own copy.
   const banned = [...tenant.voice.bannedClaims, ...tenant.compliance.neverClaim].map((b) => b.toLowerCase());
   if (banned.length > 0) {

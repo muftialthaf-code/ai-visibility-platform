@@ -188,6 +188,16 @@ export const agentSchema = z.object({
   articleWords: z
     .object({ min: z.number().int().min(100).default(800), max: z.number().int().max(5000).default(1500) })
     .default({ min: 800, max: 1500 }),
+  /**
+   * Languages to write each article in (each is written natively, not translated, so each costs a full
+   * article). Empty means the tenant's default language only.
+   */
+  articleLanguages: z.array(langCode).default([]),
+  /**
+   * In approval-first mode, publish automatically when every check passes and the article's risk score
+   * (0 to 100) is at or below this. null means every article waits for a person.
+   */
+  autoApproveMaxRisk: z.number().min(0).max(100).nullable().default(null),
 });
 
 export const crawlersSchema = z.object({

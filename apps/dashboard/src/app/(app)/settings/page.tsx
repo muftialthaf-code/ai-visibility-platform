@@ -109,6 +109,11 @@ function Defaults({ values }: { values: ReturnType<typeof parseGlobals> }) {
         <input id="monthlyBudgetUsd" name="monthlyBudgetUsd" type="number" min={0} step={1} defaultValue={values.monthlyBudgetUsd} />
         <label htmlFor="defaultLanguage">Default language for new businesses</label>
         <input id="defaultLanguage" name="defaultLanguage" type="text" defaultValue={values.defaultLanguage} />
+        <h3>Models</h3>
+        <label htmlFor="authorModel">Model that researches and writes <span className="hint">Claude model id. Costs differ a lot, so check the price before changing it.</span></label>
+        <input id="authorModel" name="authorModel" type="text" defaultValue={values.authorModel} />
+        <label htmlFor="judgeModel">Model that checks articles</label>
+        <input id="judgeModel" name="judgeModel" type="text" defaultValue={values.judgeModel} />
         <h3>Quality-check thresholds</h3>
         <label htmlFor="maxDuplicateSimilarity">Duplicate similarity limit <span className="hint">0.1 to 1. An article more similar than this to an existing one is rejected.</span></label>
         <input id="maxDuplicateSimilarity" name="maxDuplicateSimilarity" type="number" min={0.1} max={1} step={0.05} defaultValue={values.maxDuplicateSimilarity} />

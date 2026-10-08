@@ -23,7 +23,14 @@ describe('buildPatch', () => {
       }),
       langs,
     );
-    expect(patch).toEqual({ status: 'active', agent: { paused: false, publishMode: 'auto', articlesPerDay: 3, monthlyBudgetUsd: 25.5 } });
+    expect(patch).toEqual({ status: 'active', agent: { paused: false, publishMode: 'auto', articlesPerDay: 3, monthlyBudgetUsd: 25.5, autoApproveMaxRisk: null, articleLanguages: [] } });
+  });
+
+  it('a blank nullable number clears the value, a blank plain number leaves it alone', () => {
+    const patch = buildPatch(section('controls'), form({ [fname('agent.autoApproveMaxRisk')]: '', [fname('agent.articlesPerDay')]: '' }), langs) as any;
+    expect(patch.agent.autoApproveMaxRisk).toBeNull();
+    expect('articlesPerDay' in patch.agent).toBe(false);
+    expect((buildPatch(section('controls'), form({ [fname('agent.autoApproveMaxRisk')]: '25' }), langs) as any).agent.autoApproveMaxRisk).toBe(25);
   });
 
   it('a checked checkbox is true', () => {
