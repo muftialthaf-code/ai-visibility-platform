@@ -147,6 +147,8 @@ export const integrationsSchema = z.object({
       id: z.string().optional(),
     })
     .default({ provider: 'none' }),
+  /** Search Console property, for example "sc-domain:example.com" or "https://example.com/". Optional. */
+  searchConsoleProperty: z.string().min(3).optional(),
   /** IndexNow key. Public by design: it is served as /<key>.txt to prove site ownership. */
   indexNowKey: z
     .string()

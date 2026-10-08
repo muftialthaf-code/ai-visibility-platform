@@ -183,6 +183,7 @@ export const SECTIONS: Section[] = [
       { kind: 'select', path: 'integrations.leadForm.type', label: 'Lead form destination', emptyIsNull: true, options: [{ value: '', label: 'Not set up' }, { value: 'email', label: 'Email' }, { value: 'webhook', label: 'Webhook' }, { value: 'google-sheet', label: 'Google Sheet' }, { value: 'crm', label: 'CRM' }] },
       { kind: 'text', path: 'integrations.leadForm.destination', label: 'Destination', hint: 'An email address, or the name of a secret that holds the endpoint. Never paste a key here.' },
       { kind: 'select', path: 'integrations.analytics.provider', label: 'Analytics', options: [{ value: 'none', label: 'None' }, { value: 'plausible', label: 'Plausible' }, { value: 'ga4', label: 'Google Analytics 4' }] },
+      { kind: 'text', path: 'integrations.searchConsoleProperty', label: 'Search Console property', hint: 'For example sc-domain:example.com. Lets the weekly report include Google search clicks. Leave blank to skip.' },
       { kind: 'text', path: 'integrations.analytics.id', label: 'Analytics id', hint: 'Plausible site domain, or the GA4 measurement id.' },
       yesNo('crawlers.allowAI', 'Allow AI crawlers', 'GPTBot, ClaudeBot, PerplexityBot and the rest. Leave on unless there is a reason.'),
       yesNo('site.pages.home', 'Page: Home'),

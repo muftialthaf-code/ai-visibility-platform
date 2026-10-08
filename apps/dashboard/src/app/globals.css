@@ -56,3 +56,5 @@ pre { overflow: auto; background: var(--bg); padding: .75rem; border-radius: 8px
 .pair { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 .rowform { border-top: 1px dashed var(--line); padding-top: .5rem; margin-top: .5rem; }
 @media (max-width: 40rem) { h1 { font-size: 1.35rem; } .stat { font-size: 1.3rem; } }
+
+@media print { header.top, .noprint, nav { display: none !important; } body { background: #fff; color: #000; } .card { break-inside: avoid; } }

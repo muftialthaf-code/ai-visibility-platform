@@ -359,7 +359,7 @@ export function serveFake(fake: FakeGitHub, port: number): Promise<Server> {
     req.on('end', () => {
       const raw = Buffer.concat(chunks).toString('utf8');
       const r = fake.handle(req.method ?? 'GET', req.url ?? '/', raw ? JSON.parse(raw) : {});
-      res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8' });
+      res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8', connection: 'close' });
       res.end(r.status === 204 ? undefined : JSON.stringify(r.body ?? {}));
     });
   });

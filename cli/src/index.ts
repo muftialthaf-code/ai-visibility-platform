@@ -10,7 +10,7 @@ import { need, parseArgs, strFlag, type ParsedArgs } from './args.ts';
 import { changedUrls, planDeploys, toMatrix } from './plan.ts';
 import { feedCommand } from './feed.ts';
 import { tenantCommand } from './tenant.ts';
-import { agentCommand, notifyCommand, publishDueCommand } from './agent.ts';
+import { agentCommand, notifyCommand, publishDueCommand, trackerCommand } from './agent.ts';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const tenantsDir = join(repoRoot, 'tenants');
@@ -49,6 +49,11 @@ const commands: Record<string, Command> = {
   async agent(args, store) {
     const [sub, ...rest] = args.positional;
     return agentCommand({ ...args, positional: [sub ?? '', ...rest] }, store);
+  },
+
+  /** tracker run <tenant> */
+  async tracker(args, store) {
+    return trackerCommand(args, store);
   },
 
   /** publish-due: publish drafts whose scheduled time has come. */
@@ -110,12 +115,20 @@ const commands: Record<string, Command> = {
    * Print a GitHub Actions matrix.
    *   matrix --kind deploy [--changed-since <sha>]   active tenants to (re)deploy
    *   matrix --kind agent                           active tenants whose agent should run
+   *   matrix --kind tracker                         active tenants with tracked prompts
    *   matrix --kind ci [--changed-since <sha>]      every tenant folder affected by a change
    */
   async matrix(args, store) {
     const kind = strFlag(args, 'kind') ?? 'deploy';
     if (kind === 'agent') {
       console.log(toMatrix(await runnableTenants(store)));
+      return 0;
+    }
+    if (kind === 'tracker') {
+      // Active businesses that have questions to track.
+      const ids: string[] = [];
+      for (const id of await activeTenants(store)) if ((await getTenant(store, id)).trackerPrompts.length > 0) ids.push(id);
+      console.log(toMatrix(ids));
       return 0;
     }
     // "ci" covers every tenant folder (paused ones, templates and fixtures too); "deploy" only active tenants.

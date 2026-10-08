@@ -1,0 +1,14 @@
+{
+  "name": "@avp/tracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./analyze": "./src/analyze.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json", "test": "vitest run" },
+  "dependencies": {
+    "@avp/db": "workspace:*",
+    "@avp/llm": "workspace:*",
+    "@avp/runtime": "workspace:*",
+    "@avp/tenant-schema": "workspace:*"
+  }
+}

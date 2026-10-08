@@ -16,6 +16,7 @@
     "@avp/runtime": "workspace:*",
     "@avp/seo": "workspace:*",
     "@avp/tenant-ops": "workspace:*",
+    "@avp/tracker": "workspace:*",
     "@avp/tenant-schema": "workspace:*"
   }
 }

@@ -3,6 +3,7 @@ packages:
   - packages/*
   - cli
   - agent
+  - tracker
 onlyBuiltDependencies:
   - esbuild
   - sharp

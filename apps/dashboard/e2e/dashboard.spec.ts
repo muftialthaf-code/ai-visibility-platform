@@ -325,6 +325,20 @@ test.describe.serial('review queue', () => {
       rmSync(siteTenantDir, { recursive: true, force: true });
       rmSync(resolve(import.meta.dirname, '../../../dist/sites/reviewco'), { recursive: true, force: true });
     }
+    // The other Phase 5 to 7 screens load and say what they are, even before any data exists.
+    for (const [path, heading] of [['/reports', 'AI visibility reports'], ['/reports/reviewco', 'reviewco Demo Co: AI visibility'], ['/usage', 'Costs and usage'], ['/notifications', 'Notifications'], ['/content?tenant=reviewco', 'Topics']] as const) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+    }
+    // A topic added by hand is saved as approved, so the agent writes it next.
+    await page.goto('/content?tenant=reviewco');
+    await page.getByLabel('Topic', { exact: true }).fill('How do I choose a plan for a two week trip?');
+    await page.getByRole('button', { name: 'Add' }).click();
+    await expect(page.getByRole('row', { name: /two week trip/ })).toContainText('approved');
+    const csv = await page.request.get('/reports/reviewco/csv');
+    expect(csv.status()).toBe(200);
+    expect(csv.headers()['content-type']).toContain('text/csv');
+
     await context.close();
     await h.db.close();
   });

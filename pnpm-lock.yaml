@@ -156,6 +156,9 @@ importers:
       '@avp/tenant-schema':
         specifier: workspace:*
         version: link:../packages/tenant-schema
+      '@avp/tracker':
+        specifier: workspace:*
+        version: link:../tracker
 
   packages/content:
     dependencies:
@@ -224,6 +227,21 @@ importers:
       zod:
         specifier: 4.6.5
         version: 4.6.5
+
+  tracker:
+    dependencies:
+      '@avp/db':
+        specifier: workspace:*
+        version: link:../packages/db
+      '@avp/llm':
+        specifier: workspace:*
+        version: link:../packages/llm
+      '@avp/runtime':
+        specifier: workspace:*
+        version: link:../packages/runtime
+      '@avp/tenant-schema':
+        specifier: workspace:*
+        version: link:../packages/tenant-schema
 
 packages:
 

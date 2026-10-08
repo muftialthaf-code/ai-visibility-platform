@@ -1,8 +1,10 @@
 import { AnthropicLlm, UsageMeter, pricingFromEnv } from '@avp/llm';
 import { connect, getSetting, migrate } from '@avp/db';
 import { GitHubClient } from '@avp/github';
-import { DEFAULT_GLOBALS, DEFAULT_NOTIFICATIONS, parseGlobals, parseNotifications, requireSecret } from '@avp/runtime';
-import { publishDue, remindStaleDrafts, reviseDraft, runAgent, type AgentContext } from '@avp/agent';
+import { DEFAULT_GLOBALS, DEFAULT_NOTIFICATIONS, getSecret, parseGlobals, parseNotifications, requireSecret } from '@avp/runtime';
+import { notify, publishDue, remindStaleDrafts, reviseDraft, runAgent, type AgentContext } from '@avp/agent';
+import { claudeProvider, fetchSearchConsoleWeek, openaiProvider, perplexityProvider, runTracker, weekStart, type AnswerProvider } from '@avp/tracker';
+import { saveSearchConsoleWeek } from '@avp/db';
 import { getTenant, type TenantStore } from '@avp/tenant-ops';
 import { need, strFlag, type ParsedArgs } from './args.ts';
 
@@ -112,3 +114,66 @@ export async function notifyCommand(args: ParsedArgs, _store: TenantStore, env: 
   }
 }
 
+
+/** tracker run <tenant> [--trigger schedule|manual] — ask the AI assistants the tracked questions and record the answers. */
+export async function trackerCommand(args: ParsedArgs, store: TenantStore, env: NodeJS.ProcessEnv = process.env): Promise<number> {
+  const [sub, id] = args.positional;
+  if (sub !== 'run') {
+    console.log('Usage: tracker run <tenant> [--trigger schedule|manual]');
+    return sub ? 1 : 0;
+  }
+  const tenantId = need(id, 'tenant id');
+  const trigger = (strFlag(args, 'trigger') ?? 'manual') as 'schedule' | 'manual' | 'retry';
+  const tenant = await getTenant(store, tenantId);
+  const db = await database(env);
+  try {
+    const globals = parseGlobals(await getSetting(db, 'defaults', DEFAULT_GLOBALS));
+    const settings = parseNotifications(await getSetting(db, 'notifications', DEFAULT_NOTIFICATIONS));
+    const perRequest = (name: string, fallback: number) => {
+      const n = Number(env[name]);
+      return Number.isFinite(n) && n >= 0 && env[name] ? n : fallback;
+    };
+    const providers: AnswerProvider[] = [];
+    const claudeKey = getSecret(env, 'ANTHROPIC_API_KEY', tenantId);
+    if (claudeKey) providers.push(claudeProvider(new AnthropicLlm({ apiKey: claudeKey, models: { author: globals.authorModel, judge: globals.judgeModel }, meter: new UsageMeter({ pricing: pricingFromEnv(env) }) })));
+    const pplx = getSecret(env, 'PERPLEXITY_API_KEY', tenantId);
+    if (pplx) providers.push(perplexityProvider({ apiKey: pplx, usdPerRequest: perRequest('PERPLEXITY_USD_PER_REQUEST', 0.01) }));
+    const openai = getSecret(env, 'OPENAI_API_KEY', tenantId);
+    if (openai) providers.push(openaiProvider({ apiKey: openai, model: env.OPENAI_TRACKER_MODEL || 'gpt-5', usdPerRequest: perRequest('OPENAI_USD_PER_REQUEST', 0.03) }));
+
+    const result = await runTracker(
+      {
+        tenant,
+        db,
+        providers,
+        now: () => new Date(),
+        log: (m) => console.log(m),
+        maxUsd: perRequest('TRACKER_MAX_USD', 3),
+        maxPrompts: 40,
+        notify: async (n) => notify({ db, settings, env }, n),
+      },
+      { trigger, githubRunUrl: runUrl(env) },
+    );
+    console.log(`${tenantId}: ${result.status} | asked ${result.asked}, mentioned ${result.mentioned}, cited ${result.cited}, errors ${result.errors}, $${result.costUsd.toFixed(2)}${result.error ? ` | ${result.error}` : ''}`);
+
+    // Search Console is optional: it runs only when its credentials and the property are set.
+    const gscId = env.GSC_CLIENT_ID;
+    const gscSecret = getSecret(env, 'GSC_CLIENT_SECRET', tenantId);
+    const gscToken = getSecret(env, 'GSC_REFRESH_TOKEN', tenantId);
+    const property = tenant.integrations.searchConsoleProperty;
+    if (gscId && gscSecret && gscToken && property) {
+      try {
+        // The previous full week: Search Console data lags by a couple of days.
+        const last = weekStart(new Date(Date.now() - 7 * 86400_000));
+        const w = await fetchSearchConsoleWeek({ clientId: gscId, clientSecret: gscSecret, refreshToken: gscToken }, property, last);
+        await saveSearchConsoleWeek(db, { tenantId, week: last, ...w });
+        console.log(`Search Console: ${w.clicks} clicks, ${w.impressions} impressions for the week of ${last}.`);
+      } catch (e) {
+        console.log(`Search Console could not be read: ${(e as Error).message}`);
+      }
+    }
+    return result.status === 'failed' ? 1 : 0;
+  } finally {
+    await db.close();
+  }
+}

@@ -1,0 +1,80 @@
+name: AI visibility tracker
+
+# Every Monday, asks the AI assistants each business's tracked questions and records whether the business
+# was mentioned or cited. Does nothing until AGENT_ENABLED is "true" and at least one assistant key exists.
+on:
+  schedule:
+    - cron: '43 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: Business id (leave blank for every business with tracked questions)
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: plan
+        env:
+          INPUT_TENANT: ${{ inputs.tenant }}
+        run: |
+          if [ -n "$INPUT_TENANT" ]; then
+            key=$(printf '%s' "$INPUT_TENANT" | tr 'a-z-' 'A-Z_')
+            matrix=$(printf '{"include":[{"tenant":"%s","key":"%s"}]}' "$INPUT_TENANT" "$key")
+          else
+            matrix=$(pnpm -s avp matrix --kind tracker)
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  track:
+    needs: plan
+    if: ${{ vars.AGENT_ENABLED == 'true' && fromJSON(needs.plan.outputs.matrix).include[0] != null }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    concurrency:
+      group: tracker-${{ matrix.tenant }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Measure AI visibility
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets[format('ANTHROPIC_API_KEY__{0}', matrix.key)] || secrets.ANTHROPIC_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_TRACKER_MODEL: ${{ vars.OPENAI_TRACKER_MODEL }}
+          GSC_CLIENT_ID: ${{ vars.GSC_CLIENT_ID }}
+          GSC_CLIENT_SECRET: ${{ secrets.GSC_CLIENT_SECRET }}
+          GSC_REFRESH_TOKEN: ${{ secrets.GSC_REFRESH_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_FROM: ${{ vars.NOTIFY_FROM }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          TENANT: ${{ matrix.tenant }}
+          TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+        run: pnpm -s avp tracker run "$TENANT" --trigger "$TRIGGER"
