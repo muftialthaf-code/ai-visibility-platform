@@ -33,7 +33,7 @@ jobs:
           for dir in tenants/*/; do
             id=$(basename "$dir")
             echo "::group::build $id"
-            TENANT="$id" SITE_ENV=staging pnpm build:site
+            TENANT="$id" pnpm build:site
             echo "::endgroup::"
           done
       - name: Audit built sites (AEO/GEO technical requirements)
