@@ -8,7 +8,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@avp/agent": "workspace:*",
+    "@avp/db": "workspace:*",
     "@avp/feeds": "workspace:*",
+    "@avp/github": "workspace:*",
+    "@avp/llm": "workspace:*",
+    "@avp/runtime": "workspace:*",
     "@avp/seo": "workspace:*",
     "@avp/tenant-ops": "workspace:*",
     "@avp/tenant-schema": "workspace:*"

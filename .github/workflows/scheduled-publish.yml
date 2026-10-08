@@ -1,0 +1,43 @@
+name: Publish scheduled drafts
+
+# Every hour, publishes the drafts a reviewer scheduled for a time that has now passed,
+# and reminds about drafts nobody has reviewed. Does nothing until AGENT_ENABLED is "true".
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish:
+    if: ${{ vars.AGENT_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: scheduled-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Publish due drafts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: pnpm -s avp publish-due
+      - name: Remind about unreviewed drafts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_FROM: ${{ vars.NOTIFY_FROM }}
+        run: pnpm -s avp notify reminders

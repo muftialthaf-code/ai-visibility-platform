@@ -10,6 +10,7 @@ import { need, parseArgs, strFlag, type ParsedArgs } from './args.ts';
 import { changedUrls, planDeploys, toMatrix } from './plan.ts';
 import { feedCommand } from './feed.ts';
 import { tenantCommand } from './tenant.ts';
+import { agentCommand, notifyCommand, publishDueCommand } from './agent.ts';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const tenantsDir = join(repoRoot, 'tenants');
@@ -42,6 +43,22 @@ const commands: Record<string, Command> = {
   async tenant(args, store) {
     const [sub, ...rest] = args.positional;
     return tenantCommand(sub, { ...args, positional: rest }, store);
+  },
+
+  /** agent <run|revise> ... */
+  async agent(args, store) {
+    const [sub, ...rest] = args.positional;
+    return agentCommand({ ...args, positional: [sub ?? '', ...rest] }, store);
+  },
+
+  /** publish-due: publish drafts whose scheduled time has come. */
+  async 'publish-due'(args, store) {
+    return publishDueCommand(args, store);
+  },
+
+  /** notify reminders */
+  async notify(args, store) {
+    return notifyCommand(args, store);
   },
 
   /** feed sync <tenant> */

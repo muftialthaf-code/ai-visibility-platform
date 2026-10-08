@@ -123,9 +123,24 @@ importers:
 
   cli:
     dependencies:
+      '@avp/agent':
+        specifier: workspace:*
+        version: link:../agent
+      '@avp/db':
+        specifier: workspace:*
+        version: link:../packages/db
       '@avp/feeds':
         specifier: workspace:*
         version: link:../packages/feeds
+      '@avp/github':
+        specifier: workspace:*
+        version: link:../packages/github
+      '@avp/llm':
+        specifier: workspace:*
+        version: link:../packages/llm
+      '@avp/runtime':
+        specifier: workspace:*
+        version: link:../packages/runtime
       '@avp/seo':
         specifier: workspace:*
         version: link:../packages/seo

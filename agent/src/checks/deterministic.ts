@@ -37,7 +37,7 @@ function firstParagraph(body: string): string {
 export function checkStructure(i: CheckInput): CheckResult {
   const problems: string[] = [];
   const { article } = i;
-  const opening = wordCountOf(firstParagraph(article.body));
+  const opening = wordCount(firstParagraph(article.body));
   if (opening < 12 || opening > 80) problems.push(`The opening paragraph is ${opening} words. It should answer the question directly in 2 to 3 sentences (about 15 to 80 words).`);
   const questionHeadings = [...article.body.matchAll(HEADING)].filter((m) => QUESTION_END.test(m[2]!)).length;
   if (questionHeadings < 2) problems.push(`Only ${questionHeadings} question-style heading(s). Use at least 2 H2 or H3 headings phrased as questions.`);
@@ -50,7 +50,6 @@ export function checkStructure(i: CheckInput): CheckResult {
   return result('structure', 'Structure (answer first, question headings, takeaways, FAQ, links)', problems);
 }
 
-const wordCountOf = (s: string) => wordCount(s);
 
 export function checkLength(i: CheckInput): CheckResult {
   const { min, max } = i.tenant.agent.articleWords;

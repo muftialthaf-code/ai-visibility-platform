@@ -20,7 +20,7 @@ describe('planDeploys', () => {
 
 describe('toMatrix', () => {
   it('produces GitHub Actions matrix JSON', () => {
-    expect(JSON.parse(toMatrix(['a', 'b']))).toEqual({ include: [{ tenant: 'a' }, { tenant: 'b' }] });
+    expect(JSON.parse(toMatrix(['a', 'b']))).toEqual({ include: [{ tenant: 'a', key: 'A' }, { tenant: 'b', key: 'B' }] });
     expect(JSON.parse(toMatrix([]))).toEqual({ include: [] });
   });
 });
@@ -52,5 +52,14 @@ describe('cli args', () => {
     expect(setToPatch('agent.articlesPerDay=3')).toEqual({ agent: { articlesPerDay: 3 } });
     expect(setToPatch('identity.name=Acme Co')).toEqual({ identity: { name: 'Acme Co' } });
     expect(() => setToPatch('nope')).toThrow(/path=value/);
+  });
+});
+
+describe('tenantKey', () => {
+  it('upper-snakes ids the way per-tenant secret names do', async () => {
+    const { tenantKey } = await import('./plan.ts');
+    const { tenantEnvKey } = await import('@avp/runtime');
+    expect(tenantKey('acme-dental')).toBe('ACME_DENTAL');
+    expect(`ANTHROPIC_API_KEY__${tenantKey('acme-dental')}`).toBe(tenantEnvKey('ANTHROPIC_API_KEY', 'acme-dental'));
   });
 });

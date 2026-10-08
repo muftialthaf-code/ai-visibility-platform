@@ -88,6 +88,8 @@ export interface ReviewData {
   gatesPassed: boolean;
   sources: Source[];
   cost: { usd: number; tokensIn: number; tokensOut: number };
+  /** The claims of each language's article, kept so a revision can be checked against them. */
+  claims?: Record<string, Array<{ text: string; sourceUrl: string }>>;
   runId?: string;
   generatedAt: string;
   revision: number;

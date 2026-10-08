@@ -35,6 +35,12 @@ export class UsageMeter {
     } = {},
   ) {}
 
+  /** Set what is left to spend and where to save each call, once the run knows them. */
+  configure(c: { limitUsd?: number | null; onRecord?: (r: UsageRecord) => void | Promise<void> }) {
+    if (c.limitUsd !== undefined) this.opts.limitUsd = c.limitUsd;
+    if (c.onRecord) this.opts.onRecord = c.onRecord;
+  }
+
   get costUsd() {
     return this.records.reduce((n, r) => n + r.costUsd, 0);
   }

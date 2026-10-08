@@ -1,0 +1,46 @@
+name: Revise draft
+
+# Started from the dashboard's "Request changes" button: rewrites a draft from the reviewer's notes.
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: Business id
+        required: true
+      pr:
+        description: Pull request number of the draft
+        required: true
+      instructions:
+        description: What the reviewer wants changed
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  revise:
+    if: ${{ vars.AGENT_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: agent-${{ inputs.tenant }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Revise
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TENANT: ${{ inputs.tenant }}
+          PR: ${{ inputs.pr }}
+          INSTRUCTIONS: ${{ inputs.instructions }}
+        run: pnpm -s avp agent revise "$TENANT" "$PR" --instructions "$INSTRUCTIONS"

@@ -184,6 +184,10 @@ export class GitHubClient {
     return res.data.sha;
   }
 
+  async updatePull(number: number, patch: { title?: string; body?: string }): Promise<void> {
+    await this.octokit.pulls.update({ ...this.r, pull_number: number, ...patch });
+  }
+
   async closePull(number: number, comment?: string): Promise<void> {
     if (comment) await this.comment(number, comment);
     await this.octokit.pulls.update({ ...this.r, pull_number: number, state: 'closed' });

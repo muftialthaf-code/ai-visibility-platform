@@ -24,9 +24,12 @@ export function planDeploys(changedFiles: string[], activeIds: string[]): string
   return [...touched].sort();
 }
 
-/** GitHub Actions matrix JSON: {"include":[{"tenant":"a"},...]}. */
+/** Upper-snake form of a tenant id, used in per-tenant secret names (ANTHROPIC_API_KEY__ACME_DENTAL). */
+export const tenantKey = (id: string) => id.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+
+/** GitHub Actions matrix JSON: {"include":[{"tenant":"a","key":"A"},...]}. */
 export function toMatrix(ids: string[]): string {
-  return JSON.stringify({ include: ids.map((tenant) => ({ tenant })) });
+  return JSON.stringify({ include: ids.map((tenant) => ({ tenant, key: tenantKey(tenant) })) });
 }
 
 /** URLs worth pinging IndexNow about, from the files a push changed. */
