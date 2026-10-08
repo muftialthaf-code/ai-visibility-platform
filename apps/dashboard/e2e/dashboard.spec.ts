@@ -1,4 +1,9 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { runAgent } from '@avp/agent';
+import { createHarness, demoLlm } from '@avp/agent/testing';
 import { totpCode, totpStep } from '../src/lib/crypto';
 
 const PASSWORD = 'a-long-enough-passphrase';
@@ -258,5 +263,69 @@ test.describe.serial('dashboard', () => {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${path} overflows by ${overflow}px`).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+test.describe.serial('review queue', () => {
+  const siteTenantDir = resolve(import.meta.dirname, '../../../tenants/reviewco');
+
+  test('the agent writes a draft; the owner reads it, asks for changes, then approves; the article reaches main and builds into the site', async ({ browser }) => {
+    // The agent runs here against the same fake GitHub the dashboard uses, with a scripted model.
+    const h = await createHarness('reviewco', {}, { baseUrl: 'http://127.0.0.1:4010', owner: 'o', repo: 'r' });
+    const [run] = await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
+    expect(run!.error).toBeUndefined();
+    expect(run!.status).toBe('success');
+
+    const context = await browser.newContext({ storageState: STATE, baseURL: 'http://127.0.0.1:3100' });
+    const page = await context.newPage();
+    await page.goto('/review');
+    await expect(page.getByRole('heading', { name: 'Review queue' })).toBeVisible();
+    const row = page.getByRole('row', { name: /Demo:/ });
+    await expect(row).toContainText('reviewco');
+    await expect(row).toContainText('all passed');
+
+    await row.getByRole('link').click();
+    await expect(page).toHaveURL(/\/review\/\d+$/);
+    await expect(page.getByText('all required checks passed')).toBeVisible();
+    // The preview shows the article, its takeaways, FAQ and sources.
+    await expect(page.getByText('Demo takeaway one')).toBeVisible();
+    await expect(page.getByText('Demo question 1?')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Demo guide one/ })).toBeVisible();
+
+    // Request changes: the revise workflow is dispatched with the instructions.
+    await page.getByLabel('What should change?').fill('Make the opening shorter.');
+    await page.getByRole('button', { name: 'Ask the agent to rewrite' }).click();
+    await expect(page.getByText(/changes were requested/i)).toBeVisible();
+    const dispatches = await fetch('http://127.0.0.1:4010/repos/o/r/__test/dispatches').then((r) => r.json());
+    expect(dispatches.at(-1)).toMatchObject({ workflow: 'agent-revise.yml', inputs: { tenant: 'reviewco', instructions: 'Make the opening shorter.' } });
+
+    // Approve: the pull request merges, so the article is now on main.
+    await page.getByRole('button', { name: 'Approve and publish' }).click();
+    await expect(page).toHaveURL(/\/review/);
+    await expect(page.getByText(/Published/).first()).toBeVisible();
+    const files: string[] = await fetch('http://127.0.0.1:4010/repos/o/r/__test/files').then((r) => r.json());
+    const article = files.find((f) => f.startsWith('tenants/reviewco/articles/en/'));
+    expect(article).toBeTruthy();
+
+    // The site builds with the new article and passes the audit.
+    try {
+      for (const path of files.filter((f) => f.startsWith('tenants/reviewco/'))) {
+        const body = await fetch(`http://127.0.0.1:4010/repos/o/r/contents/${path}?ref=main`).then((r) => r.json());
+        mkdirSync(dirname(resolve(siteTenantDir, '../..', path)), { recursive: true });
+        writeFileSync(resolve(siteTenantDir, '../..', path), Buffer.from(body.content, 'base64'));
+      }
+      const root = resolve(import.meta.dirname, '../../..');
+      execFileSync('pnpm', ['-s', 'avp', 'site', 'build', 'reviewco'], { cwd: root, stdio: 'pipe' });
+      execFileSync('pnpm', ['-s', 'avp', 'audit', 'reviewco'], { cwd: root, stdio: 'pipe' });
+      const slug = article!.split('/').pop()!.replace('.md', '');
+      const html = readFileSync(resolve(root, `dist/sites/reviewco/blog/${slug}/index.html`), 'utf8');
+      expect(html).toContain('Demo takeaway one');
+      expect(html).toContain('FAQPage');
+    } finally {
+      rmSync(siteTenantDir, { recursive: true, force: true });
+      rmSync(resolve(import.meta.dirname, '../../../dist/sites/reviewco'), { recursive: true, force: true });
+    }
+    await context.close();
+    await h.db.close();
   });
 });

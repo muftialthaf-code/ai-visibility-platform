@@ -22,21 +22,24 @@ export interface Harness {
 }
 
 /** An in-memory database and fake GitHub, with one launched business called "acme". Used by tests and the local end-to-end setup. */
-export async function createHarness(id = 'acme', tenantPatch: Record<string, unknown> = {}): Promise<Harness> {
+export async function createHarness(id = 'acme', tenantPatch: Record<string, unknown> = {}, remote?: { baseUrl: string; owner: string; repo: string }): Promise<Harness> {
   const db = await connect('pglite://memory');
   await migrate(db);
+  // With `remote`, talk to a fake GitHub served over HTTP (the browser tests); otherwise one in this process.
   const fake = new FakeGitHub('me', 'platform', { 'tenants/_template/tenant.json': template });
-  const gh = new GitHubClient({ token: 't', owner: 'me', repo: 'platform', baseUrl: 'https://api.fake', fetch: fakeFetch(fake) });
+  const gh = remote
+    ? new GitHubClient({ token: 'fake', owner: remote.owner, repo: remote.repo, baseUrl: remote.baseUrl })
+    : new GitHubClient({ token: 't', owner: 'me', repo: 'platform', baseUrl: 'https://api.fake', fetch: fakeFetch(fake) });
   const store = new GitHubStore(gh);
-  await addTenant(store, { id, name: 'Acme Demo Co', domain: 'acme.example.com' });
+  await addTenant(store, { id, name: id === 'acme' ? 'Acme Demo Co' : `${id} Demo Co`, domain: `${id}.example.com` });
   await updateTenant(store, id, {
     identity: { tagline: { en: 'Demo tagline.', ar: 'شعار تجريبي.' } },
     profile: { description: { en: 'Demo business.', ar: 'نشاط تجريبي.' }, audience: { en: 'Demo audience.', ar: 'جمهور تجريبي.' }, pricingApproach: null },
     author: { bio: { en: 'Demo bio.', ar: 'سيرة تجريبية.' } },
     voice: { bannedClaims: ['guaranteed results'] },
     agent: { paused: false, articlesPerDay: 1, publishMode: 'approval', monthlyBudgetUsd: 50, articleWords: { min: 100, max: 400 } },
-    ...tenantPatch,
   });
+  if (Object.keys(tenantPatch).length) await updateTenant(store, id, tenantPatch);
   await setStatus(store, id, 'active');
   const reload = () => getTenant(store, id);
   const tenant = await reload();

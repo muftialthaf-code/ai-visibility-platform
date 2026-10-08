@@ -8,6 +8,7 @@ import { can } from '@/lib/permissions';
 import { readiness, tabForPath } from '@/lib/readiness';
 import { SECTIONS } from '@/lib/sections';
 import { getStore, safe } from '@/lib/services';
+import { runNowAction } from '../../review/actions';
 import {
   removeBusinessAction, rollbackAction, saveAdvancedAction, saveSectionAction, setAgentPausedAction, setStatusAction,
 } from '../actions';
@@ -96,6 +97,12 @@ export default async function BusinessPage({ params, searchParams }: { params: P
                 <ActionForm action={setAgentPausedAction} submit={raw?.agent?.paused ? 'Resume the agent' : 'Pause the agent'} submitClass="btn secondary">
                   <input type="hidden" name="tenant" value={id} />
                   <input type="hidden" name="paused" value={raw?.agent?.paused ? 'false' : 'true'} />
+                </ActionForm>
+              )}
+              {can(user, 'agent:control', id) && raw?.status === 'active' && (
+                <ActionForm action={runNowAction} submit="Write an article now" submitClass="btn secondary">
+                  <input type="hidden" name="tenant" value={id} />
+                  <label><input type="checkbox" name="dry" style={{ width: 'auto', marginRight: '.4rem' }} />Practice run: check the result but do not open a draft</label>
                 </ActionForm>
               )}
             </div>

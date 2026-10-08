@@ -13,6 +13,8 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@avp/agent": "workspace:*",
+    "@avp/content": "workspace:*",
     "@avp/db": "workspace:*",
     "@avp/github": "workspace:*",
     "@avp/runtime": "workspace:*",

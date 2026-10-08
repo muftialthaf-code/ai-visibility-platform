@@ -11,6 +11,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const items = [
     can(user, 'overview:read') && { href: '/', label: 'Overview' },
     can(user, 'tenants:read') && { href: '/businesses', label: 'Businesses' },
+    can(user, 'review:read') && { href: '/review', label: 'Review' },
+    can(user, 'review:read') && { href: '/content', label: 'Topics' },
     can(user, 'runs:read') && { href: '/runs', label: 'Runs' },
     can(user, 'users:manage') && { href: '/settings', label: 'Settings' },
   ].filter(Boolean) as Array<{ href: string; label: string }>;

@@ -10,11 +10,11 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@avp/content": "workspace:*",
     "@avp/feeds": "workspace:*",
     "@avp/seo": "workspace:*",
     "@avp/tenant-schema": "workspace:*",
     "astro": "5.18.2",
-    "gray-matter": "4.0.3",
     "marked": "18.1.0"
   }
 }

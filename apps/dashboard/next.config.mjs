@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 export default {
   // Workspace packages are published as TypeScript source, so Next compiles them.
-  transpilePackages: ['@avp/db', '@avp/github', '@avp/runtime', '@avp/tenant-ops', '@avp/tenant-schema', '@avp/seo'],
+  transpilePackages: ['@avp/agent', '@avp/content', '@avp/db', '@avp/github', '@avp/runtime', '@avp/tenant-ops', '@avp/tenant-schema', '@avp/seo'],
   serverExternalPackages: ['pg', '@electric-sql/pglite'],
   poweredByHeader: false,
   async headers() {

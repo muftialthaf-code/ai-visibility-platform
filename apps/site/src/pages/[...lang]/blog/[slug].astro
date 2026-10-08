@@ -1,6 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import { blogPosting } from '@avp/seo';
+import { blogPosting, faqPage } from '@avp/seo';
 import { locales, pageEnabled, tenant, url } from '../../../lib/tenant.ts';
 import { allArticles } from '../../../lib/content.ts';
 import { authorJsonLd, crumbs } from '../../../lib/schema.ts';
@@ -24,7 +24,7 @@ const languages = allArticles().filter((a) => a.slug === article.slug).map((a) =
 <Base
   lang={lang}
   path={path}
-  title={article.title}
+  title={article.metaTitle ?? article.title}
   description={article.description}
   ogType="article"
   languages={languages}
@@ -40,6 +40,7 @@ const languages = allArticles().filter((a) => a.slug === article.slug).map((a) =
       authorUrl: tenant.author.url,
       publisherName: tenant.identity.name,
     }),
+    ...(article.faq.length > 0 ? [faqPage(article.faq)] : []),
     authorJsonLd(lang),
     crumbs(lang, [{ name: t.blog, path: '/blog/' }, { name: article.title, path }]),
   ]}
@@ -47,6 +48,29 @@ const languages = allArticles().filter((a) => a.slug === article.slug).map((a) =
   <article>
     <h1>{article.title}</h1>
     <p class="meta">{t.written} {tenant.author.name} · {t.updated}: {article.dateModified}</p>
+    {article.takeaways.length > 0 && (
+      <aside aria-label={t.takeaways}>
+        <h2>{t.takeaways}</h2>
+        <ul>{article.takeaways.map((k) => <li>{k}</li>)}</ul>
+      </aside>
+    )}
     <div set:html={article.html} />
+    {article.faq.length > 0 && (
+      <section aria-label={t.faqHeading}>
+        <h2>{t.faqHeading}</h2>
+        {article.faq.map((f) => (
+          <div>
+            <h3>{f.question}</h3>
+            <p>{f.answer}</p>
+          </div>
+        ))}
+      </section>
+    )}
+    {article.sources.length > 0 && (
+      <section aria-label={t.sources}>
+        <h2>{t.sources}</h2>
+        <ul>{article.sources.map((s) => <li><a href={s.url} rel="noopener nofollow">{s.title}</a>{s.date ? ` (${s.date})` : ''}</li>)}</ul>
+      </section>
+    )}
   </article>
 </Base>

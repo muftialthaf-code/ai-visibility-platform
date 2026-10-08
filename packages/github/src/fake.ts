@@ -234,6 +234,10 @@ export class FakeGitHub {
       return { status: 200, body: out };
     }
 
+    // Test-only inspection endpoints (not part of the GitHub API).
+    if (method === 'GET' && p === '__test/dispatches') return { status: 200, body: this.dispatches };
+    if (method === 'GET' && p === '__test/files') return { status: 200, body: this.files('main') };
+
     // pull requests
     if (method === 'POST' && p === 'pulls') {
       const head = this.refs.get(`heads/${body.head}`);

@@ -1,3 +1,4 @@
+export type { ReviewData } from './types.ts';
 import type { ReviewData } from './types.ts';
 
 const PATTERN = /<!--\s*avp-review:([A-Za-z0-9+/=]+)\s*-->/;

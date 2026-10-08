@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import matter from 'gray-matter';
 import { marked } from 'marked';
+import { parseArticle, renderMarkdownSafe, type Article as ArticleFile } from '@avp/content';
 import { tenant, tenantsDir } from './tenant.ts';
 
 export interface Article {
@@ -11,6 +11,10 @@ export interface Article {
   description: string;
   datePublished: string;
   dateModified: string;
+  metaTitle?: string;
+  takeaways: string[];
+  faq: ArticleFile['faq'];
+  sources: ArticleFile['sources'];
   html: string;
 }
 
@@ -18,12 +22,6 @@ export interface Article {
 export function renderMarkdown(md: string): string {
   const html = marked.parse(md, { async: false }) as string;
   return html.replace(/<(\/?)h1(?=[\s>])/g, '<$1h2');
-}
-
-function isoDate(value: unknown, file: string, field: string): string {
-  const d = new Date(value as string);
-  if (!value || Number.isNaN(d.getTime())) throw new Error(`${file}: frontmatter "${field}" must be a valid date`);
-  return d.toISOString().slice(0, 10);
 }
 
 /** Articles for one language live in tenants/<id>/articles/<lang>/*.md, newest first. */
@@ -34,19 +32,14 @@ export function loadArticles(lang: string): Article[] {
     .filter((f) => f.endsWith('.md'))
     .map((f) => {
       const file = join(dir, f);
-      const { data, content } = matter(readFileSync(file, 'utf8'));
-      for (const field of ['title', 'description', 'slug']) {
-        if (!data[field] || typeof data[field] !== 'string') throw new Error(`${file}: frontmatter "${field}" is required`);
+      let a: ArticleFile;
+      try {
+        a = parseArticle(readFileSync(file, 'utf8'));
+      } catch (e) {
+        throw new Error(`${file}: ${(e as Error).message}`);
       }
-      return {
-        slug: data.slug as string,
-        lang,
-        title: data.title as string,
-        description: data.description as string,
-        datePublished: isoDate(data.datePublished, file, 'datePublished'),
-        dateModified: isoDate(data.dateModified ?? data.datePublished, file, 'dateModified'),
-        html: renderMarkdown(content),
-      };
+      // Article text is escaped and filtered by renderMarkdownSafe: raw HTML, scripts and images never reach the page.
+      return { ...a, lang, html: renderMarkdownSafe(a.body) };
     })
     .sort((a, b) => b.datePublished.localeCompare(a.datePublished));
 }

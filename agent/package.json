@@ -3,8 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./testing": "./src/testing/index.ts" },
-  "scripts": { "typecheck": "tsc -p tsconfig.json", "test": "vitest run" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./review": "./src/review.ts",
+    "./checks": "./src/checks/deterministic.ts",
+    "./site-content": "./src/site-content.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
   "dependencies": {
     "@avp/content": "workspace:*",
     "@avp/db": "workspace:*",
