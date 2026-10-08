@@ -1,0 +1,12 @@
+{
+  "name": "@avp/github",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./fake": "./src/fake.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json", "test": "vitest run" },
+  "dependencies": {
+    "@avp/tenant-ops": "workspace:*",
+    "@octokit/rest": "22.0.1"
+  }
+}

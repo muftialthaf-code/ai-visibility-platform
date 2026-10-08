@@ -7,3 +7,7 @@ dist/
 *.log
 .DS_Store
 .claude/settings.local.json
+.next/
+.data/
+test-results/
+playwright-report/

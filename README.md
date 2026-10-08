@@ -2,7 +2,7 @@
 
 A multi-tenant platform that makes any business easy for AI assistants and search engines to find, understand and recommend (AEO and GEO). Each business is a **tenant**: one config bundle in `/tenants/<id>`, from which the platform builds a complete, crawlable website. Nothing about any specific business is hardcoded in platform code.
 
-**Status: Phase 2 (cloud runtime and tenant system).** Tenant schema, shared SEO package, one generic English and Arabic site template, the full tenant CLI, IndexNow, and automatic staging and production deploys. The dashboard, article agent and tracker come in later phases (see [Roadmap](#roadmap)).
+**Status: Phase 3 (dashboard v1).** Tenant schema, shared SEO package, one generic English and Arabic site template, the full tenant CLI, IndexNow, automatic staging and production deploys, and the control dashboard (sign-in with 2FA, overview, businesses, run history, settings). The article agent and tracker come in later phases (see [Roadmap](#roadmap)).
 
 ## Requirements
 
@@ -44,6 +44,30 @@ pnpm avp indexnow ping <id> --urls <a,b> [--dry-run]
 
 Add `--commit` to any command that changes tenants to commit the change in git. Every change is validated first, and nothing is written if validation fails.
 
+## The control dashboard
+
+`apps/dashboard` is a Next.js app with its own sign-in (email, password and an authenticator app). It reads and writes tenant configs through the GitHub API, so every change is a validated commit, and keeps run history, costs and the audit log in a Postgres database.
+
+**What it does today:** overview with health, alerts and spend; add, edit, launch, pause and remove businesses (forms for every setting, a setup checklist, version history with rollback, JSON export); pause or resume every agent at once; run history; users and roles; global defaults; notification preferences; connection status; audit log.
+
+**Sign-in and roles.** Owners must turn on 2FA at first sign-in. Failed sign-ins lock an account for 15 minutes after 5 tries, and a 2FA code cannot be used twice. Roles are owner, editor, reviewer and client; the permission table is in `apps/dashboard/src/lib/permissions.ts`. Only the owner exists as a practical role until the review and client features arrive.
+
+**First run (no terminal needed).** Set `SETUP_TOKEN` on the host, open `/setup`, create the owner, and scan the QR code. Or run `DATABASE_URL=... pnpm --filter @avp/dashboard create-owner you@example.com 'a-long-passphrase'`.
+
+**Configuration** (host environment variables, never committed):
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | Postgres connection string (Supabase, Neon or similar). |
+| `SESSION_SECRET` | Random string of 32 or more characters that signs session cookies. |
+| `SETUP_TOKEN` | Enables the one-time `/setup` page. Remove it after the owner exists. |
+| `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO` | A fine-grained token with Contents, Pull requests and Actions read/write on this repository only. |
+| `RESEND_API_KEY`, `NOTIFY_FROM` | Email notifications (used from Phase 5). |
+
+**Local development:** `AVP_DEV_FS=1 pnpm --filter @avp/dashboard dev` runs against the checked-out repo and a local database in `.data/` (no GitHub or Postgres needed). Never set `AVP_DEV_FS` in production.
+
+**Tests:** `pnpm --filter @avp/dashboard test` (unit) and `pnpm --filter @avp/dashboard e2e` (Playwright, drives the production build against an in-memory fake GitHub; build first with `pnpm --filter @avp/dashboard build`).
+
 ## Repository layout
 
 | Path | What it is |
@@ -55,6 +79,10 @@ Add `--commit` to any command that changes tenants to commit the change in git. 
 | `packages/tenant-schema` | Config schema (Zod), validation and loaders. |
 | `packages/seo` | JSON-LD builders and validator, `robots.txt`, sitemap with hreflang, `llms.txt`, AI-referrer tracking. |
 | `apps/site` | The Astro site template, themed by tenant config. |
+| `apps/dashboard` | The control dashboard (Next.js). |
+| `packages/db` | Postgres access and migrations (users, audit log, runs, usage, settings). |
+| `packages/github` | GitHub client, the tenant store used by the dashboard, and an in-memory fake GitHub for tests. |
+| `packages/runtime` | Schedules, per-tenant secret lookup and the global settings shared by the dashboard and agent. |
 | `packages/tenant-ops` | Add, edit, pause, remove, export and roll back tenants. Used by the CLI now and the dashboard later. |
 | `cli` | The `pnpm avp` command (see below). |
 | `scripts` | Idempotent Cloudflare Pages project and custom-domain setup, used by the deploy workflow. |
@@ -83,7 +111,7 @@ Translated text is an object keyed by language code: `{ "en": "...", "ar": "..."
 |-------|---------|
 | `schemaVersion` | Always `1`. |
 | `id` | Folder name. Lowercase letters, numbers, hyphens. A leading `_` marks a template that is never deployed. |
-| `status` | `active` or `paused`. Paused tenants will be skipped by scheduled runs (enforced by the scheduler in Phase 2). |
+| `status` | `active` or `paused`. Paused tenants are skipped by deploys and scheduled runs. |
 | `identity` | `name`, `domain` (hostname only), `tagline`, `logo`, `brand.colors` (`primary`, `accent`, `background`, `text`), `brand.fonts`, `showPlatformBrand` (default `false`, white-label). |
 | `languages` | `default` and `supported`. Every translation must use a supported language. |
 | `profile` | `description`, `audience`, `geography`, `differentiators`, `offerings` (each with `id`, `name`, `summary`, optional `pricing`), `pricingApproach`. |
@@ -130,7 +158,7 @@ In Phase 3 the dashboard does the same through a form and commits the result.
 
 1. Foundation (done)
 2. Cloud runtime and tenant system (done): automatic deploys, per-tenant Pages projects, IndexNow, full tenant CLI
-3. Dashboard v1: login, overview, Businesses, run history
+3. Dashboard v1 (done): login with 2FA, overview, Businesses, run history, settings
 4. Seed tenants launched as ordinary tenants
 5. Article agent with the Review Queue (approval-first)
 6. Agent at scale: matrix schedule, alerts, budget caps, per-tenant cost

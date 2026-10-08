@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { validateTenant, type Issue, type TenantConfig } from '@avp/tenant-schema';
-import type { HistoryEntry, TenantStore } from './store.ts';
+import type { FileChange, HistoryEntry, TenantStore } from './store.ts';
 
 const TEMPLATE_ID = '_template';
 const ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -198,6 +198,22 @@ export const setStatus = (store: TenantStore, id: string, status: 'active' | 'pa
 
 export const setAgentPaused = (store: TenantStore, id: string, paused: boolean) =>
   updateTenant(store, id, { agent: { paused } }, `${paused ? 'Pause' : 'Resume'} agent for ${id}`);
+
+/** Pause or resume the agent for every tenant in one commit (the "Pause all" control). Returns the tenant ids changed. */
+export async function setAllAgentsPaused(store: TenantStore, paused: boolean): Promise<string[]> {
+  const changes: FileChange[] = [];
+  const changed: string[] = [];
+  for (const id of await tenantIds(store)) {
+    const raw = (await readRaw(store, id)) as any;
+    if (Boolean(raw?.agent?.paused) === paused) continue;
+    const next = deepMerge(raw, { agent: { paused } });
+    if (!validateTenant(next).ok) continue; // never write a config that would not validate
+    changes.push({ path: tenantFile(id), content: serialise(next) });
+    changed.push(id);
+  }
+  if (changes.length > 0) await store.writeFiles(changes, `${paused ? 'Pause' : 'Resume'} the agent for ${changed.length} tenant(s)`);
+  return changed;
+}
 
 /** Every file that belongs to a tenant, as path to content. Used for export and before removal. */
 export async function exportTenant(store: TenantStore, id: string): Promise<Record<string, string>> {

@@ -19,6 +19,7 @@ import {
   rollbackTenant,
   runnableTenants,
   setAgentPaused,
+  setAllAgentsPaused,
   setStatus,
   tenantHistory,
   updateTenant,
@@ -124,6 +125,21 @@ describe('scheduling helpers', () => {
     store.files.set('tenants/broken/tenant.json', '{ not json');
     const list = await listTenants(store);
     expect(list.map((s) => [s.id, s.valid])).toEqual([['broken', false], ['good', true]]);
+  });
+});
+
+describe('pause all', () => {
+  it('flips every tenant in one commit and skips ones already in that state', async () => {
+    const store = seeded();
+    for (const id of ['a', 'b', 'c']) await addTenant(store, { id, name: id, domain: `${id}.example` });
+    await setAgentPaused(store, 'a', false);
+    await setAgentPaused(store, 'b', false);
+    const before = store.commits.length;
+    expect(await setAllAgentsPaused(store, true)).toEqual(['a', 'b']);
+    expect(store.commits.length).toBe(before + 1);
+    expect((await getTenant(store, 'a')).agent.paused).toBe(true);
+    expect(await setAllAgentsPaused(store, true)).toEqual([]);
+    expect(store.commits.length).toBe(before + 1);
   });
 });
 

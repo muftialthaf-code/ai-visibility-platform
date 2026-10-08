@@ -1,0 +1,46 @@
+name: Dashboard
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/dashboard/**', 'packages/**', 'pnpm-lock.yaml', '.github/workflows/dashboard.yml']
+  pull_request:
+    paths: ['apps/dashboard/**', 'packages/**', 'pnpm-lock.yaml', '.github/workflows/dashboard.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dashboard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @avp/dashboard typecheck
+      - run: pnpm --filter @avp/dashboard test
+      - name: Build
+        run: pnpm --filter @avp/dashboard build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      - name: Install the browser
+        run: pnpm --filter @avp/dashboard exec playwright install --with-deps chromium
+      - name: Browser tests (sign-in, 2FA, businesses, settings) against a fake GitHub
+        run: pnpm --filter @avp/dashboard e2e
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: dashboard-test-results
+          path: apps/dashboard/test-results
+          retention-days: 7
