@@ -145,6 +145,11 @@ export const integrationsSchema = z.object({
       id: z.string().optional(),
     })
     .default({ provider: 'none' }),
+  /** IndexNow key. Public by design: it is served as /<key>.txt to prove site ownership. */
+  indexNowKey: z
+    .string()
+    .regex(/^[a-zA-Z0-9-]{8,128}$/, 'IndexNow keys are 8 to 128 letters, numbers or hyphens')
+    .optional(),
   feeds: z
     .array(
       z.object({

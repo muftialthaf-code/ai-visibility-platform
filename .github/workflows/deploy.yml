@@ -1,0 +1,133 @@
+name: Deploy sites
+
+# main deploys production, staging deploys the staging environment (crawlers blocked).
+# Each active tenant is its own matrix job. Only tenants affected by the push are rebuilt.
+# Nothing deploys until the repository variable DEPLOY_ENABLED is "true" and the Cloudflare
+# secrets exist, so merging this workflow before credentials are ready is safe.
+on:
+  push:
+    branches: [main, staging]
+    paths:
+      - 'tenants/**'
+      - 'apps/site/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: Tenant folder name (leave blank for every active tenant)
+        required: false
+      environment:
+        description: Where to deploy
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      environment: ${{ steps.plan.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_TENANT: ${{ inputs.tenant }}
+          INPUT_ENV: ${{ inputs.environment }}
+          BEFORE: ${{ github.event.before }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            environment="$INPUT_ENV"
+          elif [ "$REF_NAME" = "main" ]; then
+            environment=production
+          else
+            environment=staging
+          fi
+          if [ "$EVENT" = "workflow_dispatch" ] && [ -n "$INPUT_TENANT" ]; then
+            matrix=$(printf '{"include":[{"tenant":"%s"}]}' "$INPUT_TENANT")
+          elif [ "$EVENT" = "push" ]; then
+            matrix=$(pnpm -s avp matrix --kind deploy --changed-since "$BEFORE")
+          else
+            matrix=$(pnpm -s avp matrix --kind deploy)
+          fi
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "Deploying to $environment: $matrix"
+
+  deploy:
+    needs: plan
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && fromJSON(needs.plan.outputs.matrix).include[0] != null }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.plan.outputs.environment }}
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    concurrency:
+      group: deploy-${{ matrix.tenant }}-${{ needs.plan.outputs.environment }}
+      cancel-in-progress: false
+    env:
+      TENANT: ${{ matrix.tenant }}
+      DEPLOY_ENV: ${{ needs.plan.outputs.environment }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PROJECT: ${{ vars.CLOUDFLARE_PROJECT_PREFIX || 'avp' }}-${{ matrix.tenant }}
+    steps:
+      - name: Check deploy credentials
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate tenant
+        run: pnpm -s avp validate "$TENANT"
+      - name: Build site
+        env:
+          SITE_ENV: ${{ needs.plan.outputs.environment }}
+        run: pnpm build:site
+      - name: Audit site
+        if: ${{ needs.plan.outputs.environment == 'production' }}
+        run: pnpm -s avp audit "$TENANT"
+      - name: Ensure Pages project
+        run: ./scripts/ensure-pages-project.sh "$PROJECT"
+      - name: Deploy
+        run: |
+          branch=$([ "$DEPLOY_ENV" = "production" ] && echo main || echo staging)
+          npx --yes wrangler@4 pages deploy "dist/sites/$TENANT" --project-name="$PROJECT" --branch="$branch"
+      - name: Attach custom domain
+        if: ${{ needs.plan.outputs.environment == 'production' }}
+        run: |
+          domain=$(pnpm -s avp tenant show "$TENANT" | jq -r .identity.domain)
+          ./scripts/ensure-pages-domain.sh "$PROJECT" "$domain"
+      - name: Ping IndexNow for changed articles
+        if: ${{ needs.plan.outputs.environment == 'production' && github.event_name == 'push' }}
+        continue-on-error: true
+        run: pnpm -s avp indexnow ping "$TENANT" --changed-since "${{ github.event.before }}"

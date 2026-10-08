@@ -44,11 +44,20 @@ importers:
       '@avp/seo':
         specifier: workspace:*
         version: link:../packages/seo
+      '@avp/tenant-ops':
+        specifier: workspace:*
+        version: link:../packages/tenant-ops
       '@avp/tenant-schema':
         specifier: workspace:*
         version: link:../packages/tenant-schema
 
   packages/seo: {}
+
+  packages/tenant-ops:
+    dependencies:
+      '@avp/tenant-schema':
+        specifier: workspace:*
+        version: link:../tenant-schema
 
   packages/tenant-schema:
     dependencies:

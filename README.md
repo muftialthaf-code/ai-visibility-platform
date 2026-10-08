@@ -2,7 +2,7 @@
 
 A multi-tenant platform that makes any business easy for AI assistants and search engines to find, understand and recommend (AEO and GEO). Each business is a **tenant**: one config bundle in `/tenants/<id>`, from which the platform builds a complete, crawlable website. Nothing about any specific business is hardcoded in platform code.
 
-**Status: Phase 1 (Foundation).** Tenant schema, shared SEO package, one generic English and Arabic site template, CI. The dashboard, article agent, tracker and tenant CLI operations come in later phases (see [Roadmap](#roadmap)).
+**Status: Phase 2 (cloud runtime and tenant system).** Tenant schema, shared SEO package, one generic English and Arabic site template, the full tenant CLI, IndexNow, and automatic staging and production deploys. The dashboard, article agent and tracker come in later phases (see [Roadmap](#roadmap)).
 
 ## Requirements
 
@@ -21,6 +21,29 @@ pnpm audit:site            # check the built HTML against the AEO/GEO requiremen
 
 Build a different tenant with `TENANT=<folder name> pnpm build:site`. Preview with `pnpm --filter @avp/site dev` (set `TENANT` the same way).
 
+## The `avp` command
+
+```bash
+pnpm avp tenant list [--json]
+pnpm avp tenant add <id> --name "Acme Dental" --domain acme.example [--languages en,ar] [--default en]
+pnpm avp tenant edit <id> --set agent.articlesPerDay=2 --set agent.monthlyBudgetUsd=30   # or --patch '<json>' / --file patch.json
+pnpm avp tenant pause <id>            # take the site out of scheduled deploys
+pnpm avp tenant resume <id>           # make it active (prints launch-readiness warnings)
+pnpm avp tenant pause <id> --agent    # pause only the article agent (resume with --agent too)
+pnpm avp tenant status <id>           # validation, state and warnings as JSON
+pnpm avp tenant export <id> acme.tar.gz
+pnpm avp tenant remove <id> --yes     # deletes the tenant folder; export first
+pnpm avp tenant history <id>          # config history from git
+pnpm avp tenant rollback <id> <sha>   # restore an earlier config as a new commit
+pnpm avp site build <id> [--staging]
+pnpm avp validate [id]                # schema and banned-claim checks
+pnpm avp audit [id]                   # AEO/GEO checks on a built site
+pnpm avp matrix --kind deploy|agent|ci [--changed-since <sha>]   # GitHub Actions matrices
+pnpm avp indexnow ping <id> --urls <a,b> [--dry-run]
+```
+
+Add `--commit` to any command that changes tenants to commit the change in git. Every change is validated first, and nothing is written if validation fails.
+
 ## Repository layout
 
 | Path | What it is |
@@ -32,7 +55,10 @@ Build a different tenant with `TENANT=<folder name> pnpm build:site`. Preview wi
 | `packages/tenant-schema` | Config schema (Zod), validation and loaders. |
 | `packages/seo` | JSON-LD builders and validator, `robots.txt`, sitemap with hreflang, `llms.txt`, AI-referrer tracking. |
 | `apps/site` | The Astro site template, themed by tenant config. |
-| `cli` | `tenant:validate`, `tenant:list`, `audit:site` (more in Phase 2). |
+| `packages/tenant-ops` | Add, edit, pause, remove, export and roll back tenants. Used by the CLI now and the dashboard later. |
+| `cli` | The `pnpm avp` command (see below). |
+| `scripts` | Idempotent Cloudflare Pages project and custom-domain setup, used by the deploy workflow. |
+| `docs` | Actions usage estimate and secrets handling. |
 | `.github/workflows` | CI, and a manual site deploy workflow. |
 
 ## What every generated site includes
@@ -77,19 +103,22 @@ Translated text is an object keyed by language code: `{ "en": "...", "ar": "..."
 
 ## Add a business
 
-1. Copy `tenants/_template` to `tenants/<new-id>` and set `"id"` to the folder name.
-2. Fill in `tenant.json`. Keep `"status": "paused"` while you draft.
-3. Run `pnpm tenant:validate <new-id>`, then `TENANT=<new-id> pnpm build:site` and `pnpm audit:site <new-id>`.
-4. Set `"status": "active"` when the validation warnings are cleared.
+1. `pnpm avp tenant add <id> --name "..." --domain ...` creates a paused tenant from the template.
+2. Fill in `tenants/<id>/tenant.json` (or use `tenant edit --set`).
+3. `pnpm avp validate <id>`, then `pnpm avp site build <id>` and `pnpm avp audit <id>`.
+4. `pnpm avp tenant resume <id>` when the warnings are cleared. Commit and push to deploy.
 
-In Phase 3 the dashboard does this through a form and commits the result. The CLI becomes `tenant add`, `edit`, `pause`, `resume` and `remove`.
+In Phase 3 the dashboard does the same through a form and commits the result.
 
 ## Environments and deploys
 
-- **Production** deploys the built site to Cloudflare Pages, one project per tenant, with the tenant's custom domain.
-- **Staging** is the same build with `SITE_ENV=staging`, deployed to the `staging` branch of the same project.
-- The `Deploy site` workflow is manual for now and needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets. Optionally set the repository variable `CLOUDFLARE_PROJECT_PREFIX` (default `avp`); projects are named `<prefix>-<tenant>`.
-- CI (`.github/workflows/ci.yml`) typechecks, tests, validates all tenants, builds every tenant site and runs the audit on each push and pull request.
+- **Production**: a push to `main` deploys every affected active tenant to Cloudflare Pages, one project per tenant (`<prefix>-<tenant>`), and attaches the tenant's custom domain.
+- **Staging**: a push to the `staging` branch deploys the same build with `SITE_ENV=staging` (crawlers blocked) to the `staging` branch of the same Pages project. Use it to test template changes before they reach live sites.
+- Only tenants affected by a push are rebuilt. A change to shared code (the site template or packages) rebuilds all active tenants.
+- After a production deploy, IndexNow is pinged for the articles that changed.
+- **Nothing deploys until you turn it on**: set the repository variable `DEPLOY_ENABLED` to `true` and add the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets. Optionally set the variable `CLOUDFLARE_PROJECT_PREFIX` (default `avp`). Merging before this is safe.
+- CI (`.github/workflows/ci.yml`) typechecks, tests, validates every tenant, then builds and audits only the tenants a change touches.
+- Limits and cost at 3, 10 and 50 tenants: [docs/ACTIONS-USAGE.md](docs/ACTIONS-USAGE.md). Secrets: [docs/SECRETS.md](docs/SECRETS.md).
 
 ## Design rules
 
@@ -99,8 +128,8 @@ In Phase 3 the dashboard does this through a form and commits the result. The CL
 
 ## Roadmap
 
-1. **Foundation** (this phase)
-2. Cloud runtime and tenant system: scheduled workflows, per-tenant Pages projects, IndexNow, full tenant CLI
+1. Foundation (done)
+2. Cloud runtime and tenant system (done): automatic deploys, per-tenant Pages projects, IndexNow, full tenant CLI
 3. Dashboard v1: login, overview, Businesses, run history
 4. Seed tenants launched as ordinary tenants
 5. Article agent with the Review Queue (approval-first)

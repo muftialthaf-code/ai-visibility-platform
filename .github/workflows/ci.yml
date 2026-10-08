@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -28,13 +30,17 @@ jobs:
       - run: pnpm test
       - name: Validate every tenant config (including the blank template)
         run: pnpm tenant:validate
-      - name: Build every tenant site
+      - name: Build and audit the affected tenant sites
+        # Shared code changes rebuild every tenant. A change inside one tenant folder (every agent
+        # article PR) builds only that tenant, so CI cost does not grow with the number of tenants.
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          for dir in tenants/*/; do
-            id=$(basename "$dir")
+          ids=$(pnpm -s avp matrix --kind ci --changed-since "$BASE" | jq -r '.include[].tenant')
+          if [ -z "$ids" ]; then echo "No tenant sites affected."; exit 0; fi
+          for id in $ids; do
             echo "::group::build $id"
             TENANT="$id" pnpm build:site
+            pnpm -s avp audit "$id"
             echo "::endgroup::"
           done
-      - name: Audit built sites (AEO/GEO technical requirements)
-        run: pnpm audit:site

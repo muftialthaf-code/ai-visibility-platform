@@ -4,3 +4,4 @@ export * from './hreflang.ts';
 export * from './sitemap.ts';
 export * from './llms.ts';
 export * from './referrers.ts';
+export * from './indexnow.ts';

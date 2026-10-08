@@ -3,6 +3,7 @@ import {
   AI_CRAWLERS,
   blogPosting,
   breadcrumbs,
+  buildIndexNowRequest,
   buildLlmsTxt,
   buildRobotsTxt,
   buildSitemapXml,
@@ -111,6 +112,23 @@ describe('llms.txt', () => {
     });
     expect(txt.startsWith('# Acme\n\n> Does things.\n')).toBe(true);
     expect(txt).toContain('- [FAQ](https://acme.test/faq/): Answers');
+  });
+});
+
+describe('indexnow', () => {
+  it('builds a request, dedupes and drops foreign hosts', () => {
+    const r = buildIndexNowRequest('https://acme.test', 'abc12345', [
+      'https://acme.test/a/',
+      'https://acme.test/a/',
+      'https://evil.test/x/',
+      'not a url',
+    ]);
+    expect(r.body).toEqual({
+      host: 'acme.test',
+      key: 'abc12345',
+      keyLocation: 'https://acme.test/abc12345.txt',
+      urlList: ['https://acme.test/a/'],
+    });
   });
 });
 

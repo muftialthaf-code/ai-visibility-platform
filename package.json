@@ -9,8 +9,9 @@
   "scripts": {
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
+    "avp": "tsx cli/src/index.ts",
     "tenant:validate": "tsx cli/src/index.ts validate",
-    "tenant:list": "tsx cli/src/index.ts list",
+    "tenant:list": "tsx cli/src/index.ts tenant list",
     "audit:site": "tsx cli/src/index.ts audit",
     "build:site": "pnpm --filter @avp/site build"
   },
