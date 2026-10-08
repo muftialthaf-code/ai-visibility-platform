@@ -2,7 +2,7 @@
 
 A multi-tenant platform that makes any business easy for AI assistants and search engines to find, understand and recommend (AEO and GEO). Each business is a **tenant**: one config bundle in `/tenants/<id>`, from which the platform builds a complete, crawlable website. Nothing about any specific business is hardcoded in platform code.
 
-**Status: Phase 4 (seed tenants).** Tenant schema, shared SEO package, one generic English and Arabic site template, the full tenant CLI, IndexNow, automatic staging and production deploys, and the control dashboard (sign-in with 2FA, overview, businesses, run history, settings). The article agent and tracker come in later phases (see [Roadmap](#roadmap)).
+**Status: all eight phases built.** Read [docs/STATUS.md](docs/STATUS.md) for what is verified and what has never run against a real service, [docs/SETUP.md](docs/SETUP.md) for everything you need to provide, and [docs/DECISIONS.md](docs/DECISIONS.md) for the choices made.
 
 ## Requirements
 
@@ -69,6 +69,19 @@ Add `--commit` to any command that changes tenants to commit the change in git. 
 
 **Tests:** `pnpm --filter @avp/dashboard test` (unit) and `pnpm --filter @avp/dashboard e2e` (Playwright, drives the production build against an in-memory fake GitHub; build first with `pnpm --filter @avp/dashboard build`).
 
+## Daily operation
+
+- **Article agent** (`.github/workflows/agent-daily.yml`, 05:17 UTC): for each active business with the agent running, finds a topic, researches it with web search, writes an article per configured language, runs the quality checks, and opens a pull request labelled `article`, `tenant:<id>` and `gates:passed` or `gates:failed`. Manual: `pnpm avp agent run <id> [--dry-run]`, or "Write an article now" on the business page.
+- **Review queue** (dashboard, Review): read the draft, see each check, edit it, ask the agent to rewrite it (`agent-revise.yml`), reject it (the agent avoids similar topics), schedule it, or approve it. Approving merges the pull request, which deploys the site. Drafts whose checks all passed can be approved in bulk.
+- **Topics** (dashboard, Topics): the backlog; add your own and they go first.
+- **Tracker** (`tracker-weekly.yml`, Mondays 06:43 UTC): asks each assistant the business's tracked questions, records mentions, citations and competitors. Manual: `pnpm avp tracker run <id>`. Reports: dashboard, Reports (trend, by question, competitors, CSV, print to PDF).
+- **Costs and alerts**: Costs shows spend, budget and measured run time per business; Notifications lists every alert. Budget warning at the configured percentage; the agent stops at the cap.
+- **Clients**: Clients creates single-use onboarding links; Settings, Users adds a Client login that only sees its own report; Settings, Branding sets the name and report footer.
+- **Billing**: `pnpm avp billing usage --month 2026-10 [--post]` and Costs, export: usage per business, not prices.
+- **Pause**: pause one business or its agent on its Controls tab, or pause every agent at once on Businesses.
+
+Switches: nothing scheduled runs until the repository variable `AGENT_ENABLED` is `true`; deploys need `DEPLOY_ENABLED`; billing needs `BILLING_ENABLED`.
+
 ## Plan catalog module (for stores such as the eSIM tenant)
 
 Switch it on with `site.modules.catalog` (and `site.modules.locations` for a page per destination). The site shows a plans table, one page per plan with `Product` and `Offer` schema, and destination pages. Nothing is published until `tenants/<id>/data/catalog.json` has plans.
@@ -112,6 +125,10 @@ The key is read from the `secretName` environment variable (or `SUPPLIER_API_KEY
 | `packages/github` | GitHub client, the tenant store used by the dashboard, and an in-memory fake GitHub for tests. |
 | `packages/runtime` | Schedules, per-tenant secret lookup and the global settings shared by the dashboard and agent. |
 | `packages/feeds` | CSV and API plan feeds, normalisation and sync for the catalog module. |
+| `packages/content` | Article file format, safe Markdown rendering, text measures (readability, similarity, diff). |
+| `packages/llm` | Claude client with structured output and web search, cost meter and budget stop, scripted stand-in for tests. |
+| `agent` | The article agent: topics, research, writer, quality checks, pull requests, revise, notify, scheduled publish. |
+| `tracker` | AI visibility tracker: assistant providers, answer analysis, Search Console. |
 | `packages/tenant-ops` | Add, edit, pause, remove, export and roll back tenants. Used by the CLI now and the dashboard later. |
 | `cli` | The `pnpm avp` command (see below). |
 | `scripts` | Idempotent Cloudflare Pages project and custom-domain setup, used by the deploy workflow. |
@@ -151,7 +168,7 @@ Translated text is an object keyed by language code: `{ "en": "...", "ar": "..."
 | `faq` | `question` and `answer` pairs. Active tenants should have 15 to 25, each answer 40 to 60 words. |
 | `legal` | Markdown for `privacy` and `terms`, written or approved by the owner. |
 | `integrations` | `leadForm` (`type` and `destination`), `analytics` (`plausible`, `ga4` or `none`), `feeds`. Holds destinations and public IDs only. |
-| `agent` | `articlesPerDay`, `publishMode` (`approval` or `auto`), `paused`, `monthlyBudgetUsd`, `articleWords`. |
+| `agent` | `articlesPerDay`, `publishMode` (`approval` or `auto`), `paused`, `monthlyBudgetUsd`, `articleWords`, `articleLanguages`, `autoApproveMaxRisk`. |
 | `crawlers` | `allowAI` and per-crawler `overrides`. |
 | `trackerPrompts` | Prompts the weekly tracker will run. |
 | `compliance` | `neverClaim` phrases and notes. |
@@ -185,11 +202,4 @@ In Phase 3 the dashboard does the same through a form and commits the result.
 
 ## Roadmap
 
-1. Foundation (done)
-2. Cloud runtime and tenant system (done): automatic deploys, per-tenant Pages projects, IndexNow, full tenant CLI
-3. Dashboard v1 (done): login with 2FA, overview, Businesses, run history, settings
-4. Seed tenants (done as paused drafts: the three businesses are loaded as ordinary config; see each `tenants/<id>/README.md` for what is missing before launch)
-5. Article agent with the Review Queue (approval-first)
-6. Agent at scale: matrix schedule, alerts, budget caps, per-tenant cost
-7. AEO/GEO tracker and reports with PDF export
-8. Commercialization: client roles, white-labeling, billing hooks
+All eight phases are built: foundation, cloud runtime and tenant system, dashboard, seed tenants, article agent with review queue, agent at scale, tracker and reports, commercial layer. What remains is in [docs/SETUP.md](docs/SETUP.md) (what you provide) and [docs/STATUS.md](docs/STATUS.md) (what is untested and not built).

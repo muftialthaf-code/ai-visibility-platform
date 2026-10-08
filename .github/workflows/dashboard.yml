@@ -34,7 +34,7 @@ jobs:
           NEXT_TELEMETRY_DISABLED: '1'
       - name: Install the browser
         run: pnpm --filter @avp/dashboard exec playwright install --with-deps chromium
-      - name: Browser tests (sign-in, 2FA, businesses, settings) against a fake GitHub
+      - name: Browser tests (sign-in, businesses, review chain, clients) against a fake GitHub
         run: pnpm --filter @avp/dashboard e2e
         env:
           NEXT_TELEMETRY_DISABLED: '1'

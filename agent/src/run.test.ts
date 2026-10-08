@@ -206,3 +206,36 @@ describe('cost and scale', () => {
     }
   }, 120_000);
 });
+
+describe('notifications', () => {
+  it('records a note and tells the owner when email is not set up', async () => {
+    const { notify } = await import('./notify.ts');
+    const settings = { ...h.ctx(demoLlm()).notifications, emails: ['o@example.com'] };
+    await notify({ db: h.db, settings, env: {} }, { kind: 'failure', subject: 'S' });
+    const [n] = await listNotifications(h.db);
+    expect(n!.email_error).toContain('not set up');
+  });
+
+  it('sends through Resend with the key, and records a failed send without throwing', async () => {
+    const { notify } = await import('./notify.ts');
+    const settings = { ...h.ctx(demoLlm()).notifications, emails: ['o@example.com'] };
+    const seen: any[] = [];
+    const ok = (async (url: string, init: any) => (seen.push({ url, init }), new Response('{}', { status: 200 }))) as unknown as typeof fetch;
+    await notify({ db: h.db, settings, env: { RESEND_API_KEY: 'k', NOTIFY_FROM: 'a@b.c' }, fetch: ok }, { kind: 'draft', subject: '<b>Hi</b>', body: 'x' });
+    expect(seen[0].url).toBe('https://api.resend.com/emails');
+    expect(seen[0].init.headers.Authorization).toBe('Bearer k');
+    expect(JSON.parse(seen[0].init.body).html).toContain('&lt;b&gt;');
+    const bad = (async () => new Response('no', { status: 500 })) as unknown as typeof fetch;
+    await notify({ db: h.db, settings, env: { RESEND_API_KEY: 'k', NOTIFY_FROM: 'a@b.c' }, fetch: bad }, { kind: 'draft', subject: 'S2' });
+    expect((await listNotifications(h.db))[0]!.email_error).toContain('500');
+  });
+
+  it('reminds once per interval about drafts left waiting', async () => {
+    const { remindStaleDrafts } = await import('./notify.ts');
+    await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
+    const deps = { db: h.db, gh: h.gh, settings: h.ctx(demoLlm()).notifications, env: {} };
+    expect(await remindStaleDrafts({ ...deps, now: new Date(Date.now() + 3600_000) })).toBe(0);
+    expect(await remindStaleDrafts({ ...deps, now: new Date(Date.now() + 48 * 3600_000) })).toBe(1);
+    expect(await remindStaleDrafts({ ...deps, now: new Date(Date.now() + 49 * 3600_000) })).toBe(0);
+  });
+});
