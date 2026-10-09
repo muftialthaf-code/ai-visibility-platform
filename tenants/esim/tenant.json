@@ -3,10 +3,10 @@
   "id": "esim",
   "status": "paused",
   "identity": {
-    "name": "WainSim",
-    "domain": "wainsim.example",
+    "name": "Simstantly",
+    "domain": "simstantly.com",
     "tagline": {
-      "en": "Travel eSIMs for trips to and from Saudi Arabia.",
+      "en": "Travel eSIMs for trips globally",
       "ar": "شرائح eSIM للسفر من وإلى المملكة العربية السعودية."
     },
     "brand": {
