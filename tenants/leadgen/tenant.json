@@ -154,7 +154,7 @@
   "agent": {
     "articlesPerDay": 1,
     "publishMode": "approval",
-    "paused": true,
+    "paused": false,
     "monthlyBudgetUsd": 20,
     "articleLanguages": []
   },
