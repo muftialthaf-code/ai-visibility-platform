@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "leadgen",
-  "status": "paused",
+  "status": "active",
   "identity": {
     "name": "Lead Generation Engine",
     "domain": "leadgen.example",
