@@ -3,6 +3,7 @@ import { listNotifications, listRuns, listTopics, monthlyCost, schedulePublish }
 import { decodeReview, labelsFor, publishDue, reviseDraft, runAgent } from './index.ts';
 import { createHarness, demoLlm, type Harness } from './testing/index.ts';
 
+const MONTH = new Date().toISOString().slice(0, 7);
 let h: Harness;
 beforeEach(async () => {
   h = await createHarness();
@@ -31,7 +32,7 @@ describe('runAgent', () => {
     expect(run!.status).toBe('success');
     expect(run!.steps.map((s) => s.name)).toEqual(['topic', 'research', 'write', 'checks', 'open pull request']);
     expect(run!.cost_usd).toBeGreaterThan(0);
-    expect(await monthlyCost(h.db, 'acme', '2026-10')).toBeGreaterThan(0);
+    expect(await monthlyCost(h.db, 'acme', MONTH)).toBeGreaterThan(0);
     expect((await listNotifications(h.db)).map((n) => n.kind)).toContain('draft');
     expect((await listTopics(h.db, { tenantId: 'acme', status: 'used' })).length).toBe(1);
   });
@@ -159,7 +160,7 @@ describe('cost and scale', () => {
     await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
     await runAgent(h.ctx(demoLlm()), { trigger: 'manual' });
     expect((await listNotifications(h.db)).filter((n) => n.kind === 'budget-warning')).toHaveLength(1);
-    const [row] = await usageReport(h.db, '2026-10');
+    const [row] = await usageReport(h.db, MONTH);
     expect(row!.runs).toBe(2);
     expect(row!.cost_usd).toBeGreaterThan(41);
     expect(row!.run_seconds).toBeGreaterThanOrEqual(0);
@@ -196,7 +197,7 @@ describe('cost and scale', () => {
     const branches = h.fake.pulls.map((p) => p.head);
     expect(new Set(branches).size).toBe(12);
     expect(branches.every((b) => ids.some((id) => b.startsWith(`agent/${id}/`)))).toBe(true);
-    const costs = await costByTenant(h.db, '2026-10');
+    const costs = await costByTenant(h.db, MONTH);
     expect(ids.every((id) => (costs[id] ?? 0) > 0)).toBe(true);
     // Each business's draft touched only its own folder.
     for (const p of h.fake.pulls) {

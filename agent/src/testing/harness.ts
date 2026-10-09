@@ -59,7 +59,7 @@ export async function createHarness(id = 'acme', tenantPatch: Record<string, unk
       globals: DEFAULT_GLOBALS,
       notifications: { ...DEFAULT_NOTIFICATIONS, emails: [] },
       siteUrl: 'https://acme.example.com',
-      now: () => new Date('2026-10-08T05:17:00Z'),
+      now: () => new Date(),
       log: () => {},
       env: {},
       ...patch,

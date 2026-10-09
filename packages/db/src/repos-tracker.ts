@@ -42,7 +42,7 @@ export interface WeeklyVisibility {
 }
 
 /** Per week and assistant: how many questions were asked, and in how many the business was mentioned or cited. Errors are not counted as misses. */
-export async function weeklyVisibility(db: Db, tenantId: string, weeks = 12): Promise<WeeklyVisibility[]> {
+export async function weeklyVisibility(db: Db, tenantId: string, weeks = 12, asOf: Date = new Date()): Promise<WeeklyVisibility[]> {
   return db.query<WeeklyVisibility>(
     `select to_char(week, 'YYYY-MM-DD') as week, provider,
             count(*) filter (where error is null)::int as asked,
@@ -50,9 +50,9 @@ export async function weeklyVisibility(db: Db, tenantId: string, weeks = 12): Pr
             count(*) filter (where cited)::int as cited,
             count(*) filter (where error is not null)::int as errors
        from tracker_results
-      where tenant_id = $1 and week >= (current_date - ($2::int * 7))
+      where tenant_id = $1 and week >= ($3::date - ($2::int * 7))
       group by week, provider order by week, provider`,
-    [tenantId, weeks],
+    [tenantId, weeks, asOf.toISOString().slice(0, 10)],
   );
 }
 

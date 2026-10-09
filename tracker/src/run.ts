@@ -93,7 +93,7 @@ export async function runTracker(ctx: TrackerContext, opts: { trigger: 'schedule
 }
 
 async function summary(ctx: TrackerContext, week: string, r: TrackerRunResult) {
-  const rows = await weeklyVisibility(ctx.db, ctx.tenant.id, 2);
+  const rows = await weeklyVisibility(ctx.db, ctx.tenant.id, 3, ctx.now());
   const rate = (w: string) => {
     const x = rows.filter((v) => v.week === w);
     const asked = x.reduce((n, v) => n + v.asked, 0);

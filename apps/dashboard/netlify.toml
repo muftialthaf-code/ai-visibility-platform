@@ -1,0 +1,5 @@
+# Netlify rebuilds the dashboard on every push to main. Saving a business in the dashboard is itself a push,
+# which used to rebuild the dashboard under the page you were using and break the next click.
+# Exit code 0 from this command means "nothing relevant changed, skip the build".
+[build]
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../../packages ../../agent ../../tracker ../../pnpm-lock.yaml ../../pnpm-workspace.yaml"
