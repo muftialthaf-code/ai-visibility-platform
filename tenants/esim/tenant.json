@@ -29,7 +29,7 @@
   },
   "profile": {
     "description": {
-      "en": "WainSim is a travel eSIM store for travellers, especially those travelling to and from Saudi Arabia.",
+      "en": "Simstantly is a travel eSIM store for travellers, especially those travelling to and from Saudi Arabia.",
       "ar": "وين سيم متجر شرائح eSIM للمسافرين، خاصة من يسافرون من وإلى المملكة العربية السعودية."
     },
     "audience": {
@@ -37,12 +37,17 @@
       "ar": "المسافرون، خاصة من وإلى المملكة العربية السعودية."
     },
     "geography": [
-      "Saudi Arabia"
+      "Saudi Arabia",
+      "UK",
+      "Sri Lanka",
+      "Pakistan"
     ],
-    "differentiators": {},
+    "differentiators": {
+      "en": [],
+      "ar": []
+    },
     "offerings": [
       {
-        "id": "travel-esim-plans",
         "name": {
           "en": "Travel eSIM plans",
           "ar": "باقات eSIM للسفر"
@@ -50,9 +55,13 @@
         "summary": {
           "en": "Mobile data plans for travellers, installed on a phone that supports eSIM.",
           "ar": "باقات بيانات جوال للمسافرين، تُثبَّت على هاتف يدعم eSIM."
-        }
+        },
+        "id": "travel-esim-plans"
       }
-    ]
+    ],
+    "pricingApproach": {
+      "en": "Affordable packages based on customer requirements"
+    }
   },
   "personas": [
     {
